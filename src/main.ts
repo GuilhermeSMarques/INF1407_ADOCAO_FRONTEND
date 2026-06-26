@@ -558,6 +558,12 @@ function isPetFavorito(petId: number) {
   return state.favoritos.some((favorito) => favorito.pet === petId)
 }
 
+function hasSolicitacaoAtiva(petId: number) {
+  return state.solicitacoes.some((solicitacao) => (
+    solicitacao.pet === petId && solicitacao.status !== 'cancelada' && solicitacao.status !== 'recusada'
+  ))
+}
+
 function createPetCard(pet: Pet) {
   const children: Node[] = [
     createElement('h3', { text: pet.nome }),
@@ -597,10 +603,15 @@ function createPetCard(pet: Pet) {
       })
     }
 
-    const requestButton = createActionButton('primary-button', 'Solicitar adocao')
-    requestButton.addEventListener('click', () => {
-      void solicitarAdocao(pet.id)
-    })
+    const solicitacaoAtiva = hasSolicitacaoAtiva(pet.id)
+    const requestButton = createActionButton('primary-button', solicitacaoAtiva ? 'Solicitado' : 'Solicitar adocao')
+    requestButton.disabled = state.loading || solicitacaoAtiva
+
+    if (!solicitacaoAtiva) {
+      requestButton.addEventListener('click', () => {
+        void solicitarAdocao(pet.id)
+      })
+    }
     children.push(createElement('div', { className: 'card-actions' }, favoriteButton, requestButton))
   }
 
