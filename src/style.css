@@ -154,6 +154,11 @@ button {
   font-size: 20px;
 }
 
+.compact-form {
+  margin-top: 16px;
+  box-shadow: none;
+}
+
 .form-field {
   display: grid;
   gap: 6px;

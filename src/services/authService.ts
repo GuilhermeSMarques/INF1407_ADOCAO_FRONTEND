@@ -19,6 +19,12 @@ export type LoginResponse = {
   refresh: string
 }
 
+export type PasswordResetResponse = {
+  detail: string
+  uid?: string
+  token?: string
+}
+
 export function login(payload: LoginPayload) {
   return apiRequest<LoginResponse>('/api/auth/login/', {
     method: 'POST',
@@ -36,5 +42,34 @@ export function registrar(payload: RegistroPayload) {
 export function buscarUsuarioAtual(token: string) {
   return apiRequest<Usuario>('/api/auth/me/', {
     token,
+  })
+}
+
+export function alterarSenha(token: string, senhaAtual: string, novaSenha: string) {
+  return apiRequest<{ detail: string }>('/api/auth/change-password/', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({
+      senha_atual: senhaAtual,
+      nova_senha: novaSenha,
+    }),
+  })
+}
+
+export function solicitarRecuperacaoSenha(email: string) {
+  return apiRequest<PasswordResetResponse>('/api/auth/password-reset/', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+export function confirmarRecuperacaoSenha(uid: string, token: string, novaSenha: string) {
+  return apiRequest<{ detail: string }>('/api/auth/password-reset/confirm/', {
+    method: 'POST',
+    body: JSON.stringify({
+      uid,
+      token,
+      nova_senha: novaSenha,
+    }),
   })
 }

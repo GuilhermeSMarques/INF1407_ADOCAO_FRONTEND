@@ -1,7 +1,14 @@
 import './style.css'
 import { getApiBaseUrl } from './api/client'
 import { clearSession, getAccessToken, saveTokens } from './auth/session'
-import { buscarUsuarioAtual, login, registrar } from './services/authService'
+import {
+  alterarSenha,
+  buscarUsuarioAtual,
+  confirmarRecuperacaoSenha,
+  login,
+  registrar,
+  solicitarRecuperacaoSenha,
+} from './services/authService'
 import { buscarDashboard } from './services/dashboardService'
 import { criarFavorito, listarFavoritos, removerFavorito } from './services/favoritoService'
 import { atualizarPet, criarPet, excluirPet, listarPets } from './services/petService'
@@ -41,6 +48,8 @@ type AppState = {
   dashboard: DashboardResumo | null
   petFilters: PetFilters
   editingPet: Pet | null
+  resetUid: string
+  resetToken: string
   loading: boolean
   message: string
 }
@@ -53,6 +62,8 @@ const state: AppState = {
   dashboard: null,
   petFilters: {},
   editingPet: null,
+  resetUid: '',
+  resetToken: '',
   loading: false,
   message: '',
 }
@@ -199,6 +210,110 @@ function createRegisterForm() {
   return form
 }
 
+function createPasswordResetArea() {
+  const requestForm = createElement(
+    'form',
+    { className: 'auth-form' },
+    createElement('h2', { text: 'Recuperar senha' }),
+    createField('Email', 'email', 'email'),
+    createElement('button', { className: 'secondary-button', text: 'Gerar recuperacao', type: 'submit' }),
+  )
+
+  requestForm.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    state.loading = true
+    state.message = 'Solicitando recuperacao...'
+    render()
+
+    try {
+      const response = await solicitarRecuperacaoSenha(getInput(requestForm, 'email'))
+      state.resetUid = response.uid ?? ''
+      state.resetToken = response.token ?? ''
+      state.message = state.resetUid && state.resetToken
+        ? 'Token de recuperacao gerado em modo DEBUG.'
+        : response.detail
+    } catch {
+      state.message = 'Nao foi possivel solicitar recuperacao.'
+    } finally {
+      state.loading = false
+      render()
+    }
+  })
+
+  const confirmForm = createElement(
+    'form',
+    { className: 'auth-form' },
+    createElement('h2', { text: 'Confirmar recuperacao' }),
+    createField('UID', 'uid'),
+    createField('Token', 'token'),
+    createField('Nova senha', 'nova_senha', 'password'),
+    createElement('button', { className: 'secondary-button', text: 'Redefinir senha', type: 'submit' }),
+  )
+
+  setFormValue(confirmForm, 'uid', state.resetUid)
+  setFormValue(confirmForm, 'token', state.resetToken)
+
+  confirmForm.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    state.loading = true
+    state.message = 'Redefinindo senha...'
+    render()
+
+    try {
+      await confirmarRecuperacaoSenha(
+        getInput(confirmForm, 'uid'),
+        getInput(confirmForm, 'token'),
+        getInput(confirmForm, 'nova_senha'),
+      )
+      state.resetUid = ''
+      state.resetToken = ''
+      state.message = 'Senha redefinida. Voce ja pode entrar.'
+    } catch {
+      state.message = 'Nao foi possivel redefinir a senha.'
+    } finally {
+      state.loading = false
+      render()
+    }
+  })
+
+  return createElement('section', { className: 'auth-grid', ariaLabel: 'Recuperacao de senha' }, requestForm, confirmForm)
+}
+
+function createChangePasswordForm() {
+  const form = createElement(
+    'form',
+    { className: 'auth-form compact-form' },
+    createElement('h2', { text: 'Alterar senha' }),
+    createField('Senha atual', 'senha_atual', 'password'),
+    createField('Nova senha', 'nova_senha', 'password'),
+    createElement('button', { className: 'secondary-button', text: 'Alterar senha', type: 'submit' }),
+  )
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    const token = getAccessToken()
+    if (!token) {
+      return
+    }
+
+    state.loading = true
+    state.message = 'Alterando senha...'
+    render()
+
+    try {
+      await alterarSenha(token, getInput(form, 'senha_atual'), getInput(form, 'nova_senha'))
+      state.message = 'Senha alterada com sucesso.'
+    } catch {
+      state.message = 'Nao foi possivel alterar a senha.'
+    } finally {
+      state.loading = false
+      render()
+    }
+  })
+
+  return form
+}
+
 function createUserPanel(usuario: Usuario) {
   const logoutButton = createElement('button', { className: 'secondary-button', text: 'Sair', type: 'button' })
   logoutButton.addEventListener('click', () => {
@@ -219,6 +334,7 @@ function createUserPanel(usuario: Usuario) {
     createElement('h2', { text: 'Sessao ativa' }),
     createElement('p', { className: 'status-text' }, createText('Usuario: '), createElement('strong', { text: usuario.nome })),
     createElement('p', { className: 'status-text' }, createText('Perfil: '), createElement('strong', { text: usuario.tipo_usuario })),
+    createChangePasswordForm(),
     logoutButton,
   )
 }
@@ -233,6 +349,7 @@ function createAuthArea() {
     { className: 'auth-grid', ariaLabel: 'Autenticacao' },
     createLoginForm(),
     createRegisterForm(),
+    createPasswordResetArea(),
   )
 }
 
