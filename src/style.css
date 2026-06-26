@@ -210,12 +210,75 @@ button {
   border-color: var(--primary);
 }
 
+.pets-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.filters-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.pets-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pet-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--surface-muted);
+}
+
+.pet-card h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.pet-meta,
+.pet-description {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+}
+
+.pet-meta strong {
+  color: var(--text);
+}
+
 @media (min-width: 800px) {
   .app-main {
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .auth-grid {
     grid-template-columns: 1fr;
+  }
+
+  .pets-section {
+    grid-column: 1 / -1;
+  }
+
+  .filters-form {
+    grid-template-columns: 1.4fr 1fr 1fr auto;
+    align-items: end;
   }
 }

@@ -2,7 +2,8 @@ import './style.css'
 import { getApiBaseUrl } from './api/client'
 import { clearSession, getAccessToken, saveTokens } from './auth/session'
 import { buscarUsuarioAtual, login, registrar } from './services/authService'
-import type { TipoUsuario, Usuario } from './types/domain'
+import { listarPets } from './services/petService'
+import type { Pet, PetFilters, TipoUsuario, Usuario } from './types/domain'
 import { createElement, createText } from './utils/dom'
 
 const app = document.querySelector<HTMLDivElement>('#app')
@@ -15,12 +16,16 @@ const root = app
 
 type AppState = {
   usuario: Usuario | null
+  pets: Pet[]
+  petFilters: PetFilters
   loading: boolean
   message: string
 }
 
 const state: AppState = {
   usuario: null,
+  pets: [],
+  petFilters: {},
   loading: false,
   message: '',
 }
@@ -30,14 +35,14 @@ function getInput(form: HTMLFormElement, name: string) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-function createField(labelText: string, name: string, type = 'text') {
+function createField(labelText: string, name: string, type = 'text', required = true) {
   const inputId = `field-${name}`
   const label = createElement('label', { htmlFor: inputId, text: labelText })
   const input = createElement('input', {
     id: inputId,
     name,
     placeholder: labelText,
-    required: true,
+    required,
   })
   input.type = type
 
@@ -101,6 +106,7 @@ function createLoginForm() {
       saveTokens(tokens)
       state.usuario = await buscarUsuarioAtual(tokens.access)
       state.message = 'Login realizado com sucesso.'
+      await carregarPets()
     } catch {
       state.message = 'Nao foi possivel fazer login.'
     } finally {
@@ -171,6 +177,7 @@ function createUserPanel(usuario: Usuario) {
   logoutButton.addEventListener('click', () => {
     clearSession()
     state.usuario = null
+    state.pets = []
     state.message = 'Sessao encerrada.'
     render()
   })
@@ -198,6 +205,98 @@ function createAuthArea() {
   )
 }
 
+function createFilterSelect(name: string, labelText: string, options: Array<[string, string]>) {
+  const fieldId = `filter-${name}`
+  const label = createElement('label', { htmlFor: fieldId, text: labelText })
+  const select = document.createElement('select')
+  select.id = fieldId
+  select.name = name
+
+  options.forEach(([value, text]) => {
+    const option = document.createElement('option')
+    option.value = value
+    option.textContent = text
+    select.append(option)
+  })
+
+  return createElement('div', { className: 'form-field' }, label, select)
+}
+
+function createPetsFilters() {
+  const form = createElement(
+    'form',
+    { className: 'filters-form' },
+    createField('Busca', 'search', 'search', false),
+    createFilterSelect('especie', 'Especie', [
+      ['', 'Todas'],
+      ['cachorro', 'Cachorro'],
+      ['gato', 'Gato'],
+      ['outro', 'Outro'],
+    ]),
+    createFilterSelect('porte', 'Porte', [
+      ['', 'Todos'],
+      ['pequeno', 'Pequeno'],
+      ['medio', 'Medio'],
+      ['grande', 'Grande'],
+    ]),
+    createElement('button', { className: 'secondary-button', text: 'Filtrar', type: 'submit' }),
+  )
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    state.petFilters = {
+      search: getInput(form, 'search'),
+      especie: getInput(form, 'especie'),
+      porte: getInput(form, 'porte'),
+    }
+    await carregarPets()
+  })
+
+  return form
+}
+
+function createPetCard(pet: Pet) {
+  return createElement(
+    'article',
+    { className: 'pet-card' },
+    createElement('h3', { text: pet.nome }),
+    createElement('p', { className: 'pet-meta' }, createText(`${pet.especie} - ${pet.porte} - ${pet.status}`)),
+    createElement('p', { className: 'pet-description', text: pet.descricao || 'Sem descricao cadastrada.' }),
+    createElement('p', { className: 'pet-meta' }, createText('Responsavel: '), createElement('strong', { text: pet.responsavel_nome })),
+  )
+}
+
+function createPetsSection() {
+  if (!state.usuario) {
+    return createElement(
+      'section',
+      { className: 'status-panel', ariaLabel: 'Pets' },
+      createElement('h2', { text: 'Pets' }),
+      createElement('p', { className: 'status-text', text: 'Entre para visualizar os pets disponiveis.' }),
+    )
+  }
+
+  const reloadButton = createElement('button', { className: 'secondary-button', text: 'Atualizar pets', type: 'button' })
+  reloadButton.addEventListener('click', () => {
+    void carregarPets()
+  })
+
+  const list = createElement('div', { className: 'pets-list' })
+  if (state.pets.length === 0) {
+    list.append(createElement('p', { className: 'status-text', text: 'Nenhum pet encontrado.' }))
+  } else {
+    state.pets.forEach((pet) => list.append(createPetCard(pet)))
+  }
+
+  return createElement(
+    'section',
+    { className: 'pets-section', ariaLabel: 'Lista de pets' },
+    createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Pets' }), reloadButton),
+    createPetsFilters(),
+    list,
+  )
+}
+
 function createMainContent() {
   const apiUrl = createElement('strong', { text: getApiBaseUrl() })
 
@@ -212,6 +311,7 @@ function createMainContent() {
       createMessage(),
     ),
     createAuthArea(),
+    createPetsSection(),
   )
 }
 
@@ -233,9 +333,31 @@ async function bootstrap() {
   try {
     state.usuario = await buscarUsuarioAtual(token)
     state.message = 'Sessao restaurada.'
+    await carregarPets()
   } catch {
     clearSession()
     state.message = 'Sessao expirada. Entre novamente.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function carregarPets() {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Carregando pets...'
+  render()
+
+  try {
+    state.pets = await listarPets(token, state.petFilters)
+    state.message = 'Pets carregados.'
+  } catch {
+    state.message = 'Nao foi possivel carregar os pets.'
   } finally {
     state.loading = false
     render()

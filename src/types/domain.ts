@@ -28,3 +28,11 @@ export type Pet = {
   criado_em: string
   atualizado_em: string
 }
+
+export type PetFilters = {
+  especie?: string
+  porte?: string
+  sexo?: string
+  status?: StatusPet | ''
+  search?: string
+}
