@@ -1,5 +1,5 @@
 import './style.css'
-import { getApiBaseUrl } from './api/client'
+import { ApiError, getApiBaseUrl } from './api/client'
 import { clearSession, getAccessToken, saveTokens } from './auth/session'
 import {
   alterarSenha,
@@ -154,6 +154,47 @@ function createMessage() {
   return createElement('div', { className: 'message', text: state.message })
 }
 
+function extractErrorMessage(data: unknown): string | null {
+  if (!data) {
+    return null
+  }
+
+  if (typeof data === 'string') {
+    return data
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(extractErrorMessage).filter(Boolean).join(' ')
+  }
+
+  if (typeof data === 'object') {
+    const entries = Object.entries(data)
+    const detail = entries.find(([key]) => key === 'detail')
+
+    if (detail) {
+      return extractErrorMessage(detail[1])
+    }
+
+    return entries
+      .map(([key, value]) => {
+        const message = extractErrorMessage(value)
+        return message ? `${key}: ${message}` : null
+      })
+      .filter(Boolean)
+      .join(' ')
+  }
+
+  return null
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof ApiError) {
+    return extractErrorMessage(error.data) || fallback
+  }
+
+  return fallback
+}
+
 function createLoginForm() {
   const form = createElement(
     'form',
@@ -179,8 +220,8 @@ function createLoginForm() {
       state.usuario = await buscarUsuarioAtual(tokens.access)
       state.message = 'Login realizado com sucesso.'
       await carregarDadosPrincipais()
-    } catch {
-      state.message = 'Nao foi possivel fazer login.'
+    } catch (error) {
+      state.message = getErrorMessage(error, 'Nao foi possivel fazer login.')
     } finally {
       state.loading = false
       render()
@@ -233,8 +274,8 @@ function createRegisterForm() {
         tipo_usuario: getInput(form, 'tipo_usuario') as TipoUsuario,
       })
       state.message = 'Conta criada. Voce ja pode entrar.'
-    } catch {
-      state.message = 'Nao foi possivel criar a conta.'
+    } catch (error) {
+      state.message = getErrorMessage(error, 'Nao foi possivel criar a conta.')
     } finally {
       state.loading = false
       render()
@@ -266,8 +307,8 @@ function createPasswordResetArea() {
       state.message = state.resetUid && state.resetToken
         ? 'Token de recuperacao gerado em modo DEBUG.'
         : response.detail
-    } catch {
-      state.message = 'Nao foi possivel solicitar recuperacao.'
+    } catch (error) {
+      state.message = getErrorMessage(error, 'Nao foi possivel solicitar recuperacao.')
     } finally {
       state.loading = false
       render()
@@ -302,8 +343,8 @@ function createPasswordResetArea() {
       state.resetUid = ''
       state.resetToken = ''
       state.message = 'Senha redefinida. Voce ja pode entrar.'
-    } catch {
-      state.message = 'Nao foi possivel redefinir a senha.'
+    } catch (error) {
+      state.message = getErrorMessage(error, 'Nao foi possivel redefinir a senha.')
     } finally {
       state.loading = false
       render()
@@ -337,8 +378,8 @@ function createChangePasswordForm() {
     try {
       await alterarSenha(token, getInput(form, 'senha_atual'), getInput(form, 'nova_senha'))
       state.message = 'Senha alterada com sucesso.'
-    } catch {
-      state.message = 'Nao foi possivel alterar a senha.'
+    } catch (error) {
+      state.message = getErrorMessage(error, 'Nao foi possivel alterar a senha.')
     } finally {
       state.loading = false
       render()
@@ -847,9 +888,9 @@ async function bootstrap() {
     state.usuario = await buscarUsuarioAtual(token)
     state.message = 'Sessao restaurada.'
     await carregarDadosPrincipais()
-  } catch {
+  } catch (error) {
     clearSession()
-    state.message = 'Sessao expirada. Entre novamente.'
+    state.message = getErrorMessage(error, 'Sessao expirada. Entre novamente.')
   } finally {
     state.loading = false
     render()
@@ -876,8 +917,8 @@ async function carregarPets() {
   try {
     state.pets = await listarPets(token, state.petFilters)
     state.message = 'Pets carregados.'
-  } catch {
-    state.message = 'Nao foi possivel carregar os pets.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel carregar os pets.')
   } finally {
     state.loading = false
     render()
@@ -897,8 +938,8 @@ async function carregarDashboard() {
   try {
     state.dashboard = await buscarDashboard(token)
     state.message = 'Painel carregado.'
-  } catch {
-    state.message = 'Nao foi possivel carregar o painel.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel carregar o painel.')
   } finally {
     state.loading = false
     render()
@@ -918,8 +959,8 @@ async function carregarFavoritos() {
   try {
     state.favoritos = await listarFavoritos(token)
     state.message = 'Favoritos carregados.'
-  } catch {
-    state.message = 'Nao foi possivel carregar os favoritos.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel carregar os favoritos.')
   } finally {
     state.loading = false
     render()
@@ -939,8 +980,8 @@ async function carregarSolicitacoes() {
   try {
     state.solicitacoes = await listarSolicitacoes(token)
     state.message = 'Solicitacoes carregadas.'
-  } catch {
-    state.message = 'Nao foi possivel carregar as solicitacoes.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel carregar as solicitacoes.')
   } finally {
     state.loading = false
     render()
@@ -962,8 +1003,8 @@ async function favoritarPet(petId: number) {
     state.message = 'Pet adicionado aos favoritos.'
     await carregarFavoritos()
     await carregarDashboard()
-  } catch {
-    state.message = 'Nao foi possivel favoritar o pet.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel favoritar o pet.')
   } finally {
     state.loading = false
     render()
@@ -985,8 +1026,8 @@ async function desfavoritarPet(favoritoId: number) {
     state.favoritos = state.favoritos.filter((favorito) => favorito.id !== favoritoId)
     state.message = 'Favorito removido.'
     await carregarDashboard()
-  } catch {
-    state.message = 'Nao foi possivel remover o favorito.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel remover o favorito.')
   } finally {
     state.loading = false
     render()
@@ -1009,8 +1050,8 @@ async function cadastrarPet(payload: PetPayload) {
     state.message = 'Pet cadastrado.'
     await carregarPets()
     await carregarDashboard()
-  } catch {
-    state.message = 'Nao foi possivel cadastrar o pet.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel cadastrar o pet.')
   } finally {
     state.loading = false
     render()
@@ -1032,8 +1073,8 @@ async function solicitarAdocao(petId: number) {
     state.message = 'Solicitacao enviada.'
     await carregarSolicitacoes()
     await carregarDashboard()
-  } catch {
-    state.message = 'Nao foi possivel enviar a solicitacao.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel enviar a solicitacao.')
   } finally {
     state.loading = false
     render()
@@ -1055,8 +1096,8 @@ async function cancelarAdocao(solicitacaoId: number) {
     state.solicitacoes = state.solicitacoes.filter((solicitacao) => solicitacao.id !== solicitacaoId)
     state.message = 'Solicitacao cancelada.'
     await carregarDashboard()
-  } catch {
-    state.message = 'Nao foi possivel cancelar a solicitacao.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel cancelar a solicitacao.')
   } finally {
     state.loading = false
     render()
@@ -1085,8 +1126,8 @@ async function decidirSolicitacao(solicitacaoId: number, decisao: 'aprovar' | 'r
       await carregarPets()
     }
     await carregarDashboard()
-  } catch {
-    state.message = 'Nao foi possivel atualizar a solicitacao.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel atualizar a solicitacao.')
   } finally {
     state.loading = false
     render()
@@ -1109,8 +1150,8 @@ async function salvarPet(petId: number, payload: PetPayload) {
     state.editingPet = null
     state.message = 'Pet atualizado.'
     await carregarDashboard()
-  } catch {
-    state.message = 'Nao foi possivel atualizar o pet.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel atualizar o pet.')
   } finally {
     state.loading = false
     render()
@@ -1135,8 +1176,8 @@ async function removerPet(petId: number) {
     }
     state.message = 'Pet excluido.'
     await carregarDashboard()
-  } catch {
-    state.message = 'Nao foi possivel excluir o pet.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel excluir o pet.')
   } finally {
     state.loading = false
     render()
