@@ -357,9 +357,14 @@ button:disabled {
 
 .card-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 12px;
+}
+
+.card-actions button {
+  flex: 1 1 140px;
 }
 
 .metrics-grid {
