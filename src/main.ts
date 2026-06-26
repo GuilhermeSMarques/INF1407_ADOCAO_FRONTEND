@@ -41,6 +41,7 @@ if (!app) {
 
 const root = app
 
+// Telas disponíveis na navegação principal
 type ActiveView = 'pets' | 'solicitacoes' | 'favoritos' | 'painel'
 type NavigationItem = [ActiveView, string]
 type SolicitacaoFilters = {
@@ -64,6 +65,7 @@ type AppState = {
   message: string
 }
 
+// Estado global da aplicação — qualquer mudança deve ser seguida de render()
 const state: AppState = {
   usuario: null,
   activeView: 'pets',
@@ -1071,10 +1073,13 @@ function createMainContent() {
   )
 }
 
+// Renderização síncrona e completa: reconstrói toda a árvore DOM a cada mudança de estado.
+// Evita inconsistências entre estado e UI sem a necessidade de um framework reativo.
 function render() {
   root.replaceChildren(createHeader(), createNavigation(), createMainContent())
 }
 
+// Inicialização: verifica se há token salvo e restaura a sessão automaticamente
 async function bootstrap() {
   const token = getAccessToken()
   if (!token) {

@@ -1,3 +1,4 @@
+// Chaves usadas no localStorage para persistir os tokens JWT entre sessões
 const ACCESS_TOKEN_KEY = 'adocao_access_token'
 const REFRESH_TOKEN_KEY = 'adocao_refresh_token'
 

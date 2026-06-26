@@ -62,6 +62,8 @@ async function request<T>(path: string, options: ApiRequestOptions, token?: stri
   return data as T
 }
 
+// Tenta obter um novo access token usando o refresh token armazenado.
+// Se falhar (refresh expirado ou inválido), limpa a sessão por completo.
 async function refreshAccessToken() {
   const refresh = getRefreshToken()
   if (!refresh) {
@@ -82,6 +84,8 @@ async function refreshAccessToken() {
   }
 }
 
+// Ponto de entrada para todas as chamadas à API.
+// Em caso de 401, tenta renovar o token uma vez antes de propagar o erro.
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}) {
   try {
     return await request<T>(path, options, options.token)
