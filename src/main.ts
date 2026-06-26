@@ -535,6 +535,12 @@ function createPetsFilters() {
     ]),
     createActionButton('secondary-button', 'Filtrar', 'submit'),
   )
+  const clearButton = createActionButton('secondary-button', 'Limpar filtros')
+  clearButton.addEventListener('click', () => {
+    state.petFilters = {}
+    void carregarPets()
+  })
+  form.append(clearButton)
 
   setFormValue(form, 'search', state.petFilters.search ?? '')
   setFormValue(form, 'especie', state.petFilters.especie ?? '')
