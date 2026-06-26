@@ -226,6 +226,10 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback
 }
 
+function confirmAction(message: string) {
+  return window.confirm(message)
+}
+
 function createLoginForm() {
   const form = createElement(
     'form',
@@ -606,6 +610,10 @@ function createPetCard(pet: Pet) {
 
     const deleteButton = createActionButton('danger-button', 'Excluir')
     deleteButton.addEventListener('click', () => {
+      if (!confirmAction(`Excluir ${pet.nome}?`)) {
+        return
+      }
+
       void removerPet(pet.id)
     })
     children.push(createElement('div', { className: 'card-actions' }, editButton, deleteButton))
@@ -775,6 +783,10 @@ function createSolicitacaoCard(solicitacao: SolicitacaoAdocao) {
   if (state.usuario?.tipo_usuario === 'adotante' && solicitacao.status === 'pendente') {
     const cancelButton = createActionButton('danger-button', 'Cancelar')
     cancelButton.addEventListener('click', () => {
+      if (!confirmAction(`Cancelar solicitacao para ${solicitacao.pet_nome}?`)) {
+        return
+      }
+
       void cancelarAdocao(solicitacao.id)
     })
     children.push(createElement('div', { className: 'card-actions' }, cancelButton))
@@ -788,6 +800,10 @@ function createSolicitacaoCard(solicitacao: SolicitacaoAdocao) {
 
     const rejectButton = createActionButton('danger-button', 'Recusar')
     rejectButton.addEventListener('click', () => {
+      if (!confirmAction(`Recusar solicitacao para ${solicitacao.pet_nome}?`)) {
+        return
+      }
+
       void decidirSolicitacao(solicitacao.id, 'recusar')
     })
 
@@ -825,6 +841,10 @@ function createSolicitacoesSection() {
 function createFavoritoCard(favorito: Favorito) {
   const removeButton = createActionButton('danger-button', 'Remover')
   removeButton.addEventListener('click', () => {
+    if (!confirmAction(`Remover ${favorito.pet_nome} dos favoritos?`)) {
+      return
+    }
+
     void desfavoritarPet(favorito.id)
   })
 
