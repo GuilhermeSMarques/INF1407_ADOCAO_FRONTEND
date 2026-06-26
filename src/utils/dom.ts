@@ -3,6 +3,12 @@ type ElementOptions = {
   text?: string
   type?: 'button' | 'submit' | 'reset'
   ariaLabel?: string
+  htmlFor?: string
+  id?: string
+  name?: string
+  placeholder?: string
+  value?: string
+  required?: boolean
 }
 
 export function createText(text: string) {
@@ -30,6 +36,30 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
 
   if (options.ariaLabel) {
     element.setAttribute('aria-label', options.ariaLabel)
+  }
+
+  if (options.id) {
+    element.id = options.id
+  }
+
+  if (options.htmlFor && element instanceof HTMLLabelElement) {
+    element.htmlFor = options.htmlFor
+  }
+
+  if (options.name && element instanceof HTMLInputElement) {
+    element.name = options.name
+  }
+
+  if (options.placeholder && element instanceof HTMLInputElement) {
+    element.placeholder = options.placeholder
+  }
+
+  if (options.value && element instanceof HTMLInputElement) {
+    element.value = options.value
+  }
+
+  if (options.required && element instanceof HTMLInputElement) {
+    element.required = true
   }
 
   children.forEach((child) => {

@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = 'http://127.0.0.1:8000'
+const DEFAULT_API_URL = 'http://127.0.0.1:8000/'
 
 export function getApiBaseUrl() {
   return import.meta.env.VITE_API_URL ?? DEFAULT_API_URL
@@ -15,13 +15,25 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest<T>(path: string, options: RequestInit = {}) {
+type ApiRequestOptions = RequestInit & {
+  token?: string | null
+}
+
+export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}) {
+  const headers = new Headers(options.headers)
+  headers.set('Accept', 'application/json')
+
+  if (options.token) {
+    headers.set('Authorization', `Bearer ${options.token}`)
+  }
+
+  if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...options,
-    headers: {
-      Accept: 'application/json',
-      ...options.headers,
-    },
+    headers,
   })
 
   const data = await response.json().catch(() => null)
