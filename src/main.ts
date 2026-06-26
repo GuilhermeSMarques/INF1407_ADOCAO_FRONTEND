@@ -585,6 +585,28 @@ function createPetPhoto(pet: Pet) {
   return image
 }
 
+function formatStatus(value: StatusPet | StatusSolicitacao) {
+  const labels: Record<StatusPet | StatusSolicitacao, string> = {
+    disponivel: 'Disponivel',
+    em_processo: 'Em processo',
+    adotado: 'Adotado',
+    indisponivel: 'Indisponivel',
+    pendente: 'Pendente',
+    aprovada: 'Aprovada',
+    recusada: 'Recusada',
+    cancelada: 'Cancelada',
+  }
+
+  return labels[value]
+}
+
+function createStatusBadge(status: StatusPet | StatusSolicitacao) {
+  return createElement('span', {
+    className: `status-badge status-${status}`,
+    text: formatStatus(status),
+  })
+}
+
 function isPetFavorito(petId: number) {
   return state.favoritos.some((favorito) => favorito.pet === petId)
 }
@@ -598,7 +620,7 @@ function hasSolicitacaoAtiva(petId: number) {
 function createPetCard(pet: Pet) {
   const children: Node[] = [
     createElement('h3', { text: pet.nome }),
-    createElement('p', { className: 'pet-meta' }, createText(`${pet.especie} - ${pet.porte} - ${pet.status}`)),
+    createElement('p', { className: 'pet-meta pet-summary' }, createText(`${pet.especie} - ${pet.porte}`), createStatusBadge(pet.status)),
     createElement('p', { className: 'pet-description', text: pet.descricao || 'Sem descricao cadastrada.' }),
     createElement('p', { className: 'pet-meta' }, createText('Responsavel: '), createElement('strong', { text: pet.responsavel_nome })),
   ]
@@ -832,7 +854,7 @@ function createSolicitacoesFilters() {
 function createSolicitacaoCard(solicitacao: SolicitacaoAdocao) {
   const children: Node[] = [
     createElement('h3', { text: solicitacao.pet_nome }),
-    createElement('p', { className: 'pet-meta' }, createText(`Status: ${solicitacao.status}`)),
+    createElement('p', { className: 'pet-meta pet-summary' }, createText('Status:'), createStatusBadge(solicitacao.status)),
     createElement('p', { className: 'pet-description', text: solicitacao.mensagem || 'Sem mensagem.' }),
   ]
 
