@@ -41,6 +41,7 @@ if (!app) {
 const root = app
 
 type ActiveView = 'pets' | 'solicitacoes' | 'favoritos' | 'painel'
+type NavigationItem = [ActiveView, string]
 
 type AppState = {
   usuario: Usuario | null
@@ -121,14 +122,37 @@ function createHeader() {
   return createElement('header', { className: 'app-header' }, title, subtitle)
 }
 
-function createNavigation() {
-  const nav = createElement('nav', { className: 'app-nav', ariaLabel: 'Navegacao principal' })
-  const items: Array<[ActiveView, string]> = [
+function getNavigationItems(): NavigationItem[] {
+  if (!state.usuario) {
+    return [['pets', 'Pets']]
+  }
+
+  const items: NavigationItem[] = [
     ['pets', 'Pets'],
     ['solicitacoes', 'Solicitacoes'],
-    ['favoritos', 'Favoritos'],
     ['painel', 'Painel'],
   ]
+
+  if (state.usuario.tipo_usuario === 'adotante') {
+    items.splice(2, 0, ['favoritos', 'Favoritos'])
+  }
+
+  return items
+}
+
+function ensureActiveView() {
+  const availableViews = getNavigationItems().map(([view]) => view)
+
+  if (!availableViews.includes(state.activeView)) {
+    state.activeView = 'pets'
+  }
+}
+
+function createNavigation() {
+  ensureActiveView()
+
+  const nav = createElement('nav', { className: 'app-nav', ariaLabel: 'Navegacao principal' })
+  const items = getNavigationItems()
 
   items.forEach(([view, label]) => {
     const button = createElement('button', {
@@ -399,6 +423,7 @@ function createUserPanel(usuario: Usuario) {
     state.favoritos = []
     state.dashboard = null
     state.editingPet = null
+    state.activeView = 'pets'
     state.message = 'Sessao encerrada.'
     render()
   })
@@ -834,6 +859,8 @@ function createDashboardSection() {
 }
 
 function createMainContent() {
+  ensureActiveView()
+
   const apiUrl = createElement('strong', { text: getApiBaseUrl() })
   const sections: Node[] = [
     createElement(
