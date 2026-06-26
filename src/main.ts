@@ -2,6 +2,7 @@ import './style.css'
 import { getApiBaseUrl } from './api/client'
 import { clearSession, getAccessToken, saveTokens } from './auth/session'
 import { buscarUsuarioAtual, login, registrar } from './services/authService'
+import { criarFavorito, listarFavoritos, removerFavorito } from './services/favoritoService'
 import { atualizarPet, criarPet, excluirPet, listarPets } from './services/petService'
 import {
   aprovarSolicitacao,
@@ -10,7 +11,7 @@ import {
   listarSolicitacoes,
   recusarSolicitacao,
 } from './services/solicitacaoService'
-import type { Pet, PetFilters, PetPayload, SolicitacaoAdocao, StatusPet, TipoUsuario, Usuario } from './types/domain'
+import type { Favorito, Pet, PetFilters, PetPayload, SolicitacaoAdocao, StatusPet, TipoUsuario, Usuario } from './types/domain'
 import { createElement, createText } from './utils/dom'
 
 const app = document.querySelector<HTMLDivElement>('#app')
@@ -25,6 +26,7 @@ type AppState = {
   usuario: Usuario | null
   pets: Pet[]
   solicitacoes: SolicitacaoAdocao[]
+  favoritos: Favorito[]
   petFilters: PetFilters
   editingPet: Pet | null
   loading: boolean
@@ -35,6 +37,7 @@ const state: AppState = {
   usuario: null,
   pets: [],
   solicitacoes: [],
+  favoritos: [],
   petFilters: {},
   editingPet: null,
   loading: false,
@@ -190,6 +193,7 @@ function createUserPanel(usuario: Usuario) {
     state.usuario = null
     state.pets = []
     state.solicitacoes = []
+    state.favoritos = []
     state.editingPet = null
     state.message = 'Sessao encerrada.'
     render()
@@ -314,11 +318,16 @@ function createPetCard(pet: Pet) {
   }
 
   if (state.usuario?.tipo_usuario === 'adotante' && pet.status === 'disponivel') {
+    const favoriteButton = createElement('button', { className: 'secondary-button', text: 'Favoritar', type: 'button' })
+    favoriteButton.addEventListener('click', () => {
+      void favoritarPet(pet.id)
+    })
+
     const requestButton = createElement('button', { className: 'primary-button', text: 'Solicitar adocao', type: 'button' })
     requestButton.addEventListener('click', () => {
       void solicitarAdocao(pet.id)
     })
-    children.push(createElement('div', { className: 'card-actions' }, requestButton))
+    children.push(createElement('div', { className: 'card-actions' }, favoriteButton, requestButton))
   }
 
   return createElement('article', { className: 'pet-card' }, ...children)
@@ -507,6 +516,46 @@ function createSolicitacoesSection() {
   )
 }
 
+function createFavoritoCard(favorito: Favorito) {
+  const removeButton = createElement('button', { className: 'danger-button', text: 'Remover', type: 'button' })
+  removeButton.addEventListener('click', () => {
+    void desfavoritarPet(favorito.id)
+  })
+
+  return createElement(
+    'article',
+    { className: 'pet-card' },
+    createElement('h3', { text: favorito.pet_nome }),
+    createElement('p', { className: 'pet-meta' }, createText(`Favorito #${favorito.id}`)),
+    createElement('div', { className: 'card-actions' }, removeButton),
+  )
+}
+
+function createFavoritosSection() {
+  if (state.usuario?.tipo_usuario !== 'adotante') {
+    return createElement('div', { className: 'empty' })
+  }
+
+  const reloadButton = createElement('button', { className: 'secondary-button', text: 'Atualizar', type: 'button' })
+  reloadButton.addEventListener('click', () => {
+    void carregarFavoritos()
+  })
+
+  const list = createElement('div', { className: 'pets-list' })
+  if (state.favoritos.length === 0) {
+    list.append(createElement('p', { className: 'status-text', text: 'Nenhum favorito encontrado.' }))
+  } else {
+    state.favoritos.forEach((favorito) => list.append(createFavoritoCard(favorito)))
+  }
+
+  return createElement(
+    'section',
+    { className: 'pets-section', ariaLabel: 'Favoritos' },
+    createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Favoritos' }), reloadButton),
+    list,
+  )
+}
+
 function createMainContent() {
   const apiUrl = createElement('strong', { text: getApiBaseUrl() })
 
@@ -524,6 +573,7 @@ function createMainContent() {
     createPetForm(),
     createPetsSection(),
     createSolicitacoesSection(),
+    createFavoritosSection(),
   )
 }
 
@@ -558,6 +608,7 @@ async function bootstrap() {
 async function carregarDadosPrincipais() {
   await carregarPets()
   await carregarSolicitacoes()
+  await carregarFavoritos()
 }
 
 async function carregarPets() {
@@ -581,6 +632,27 @@ async function carregarPets() {
   }
 }
 
+async function carregarFavoritos() {
+  const token = getAccessToken()
+  if (!token || state.usuario?.tipo_usuario !== 'adotante') {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Carregando favoritos...'
+  render()
+
+  try {
+    state.favoritos = await listarFavoritos(token)
+    state.message = 'Favoritos carregados.'
+  } catch {
+    state.message = 'Nao foi possivel carregar os favoritos.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
 async function carregarSolicitacoes() {
   const token = getAccessToken()
   if (!token) {
@@ -596,6 +668,50 @@ async function carregarSolicitacoes() {
     state.message = 'Solicitacoes carregadas.'
   } catch {
     state.message = 'Nao foi possivel carregar as solicitacoes.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function favoritarPet(petId: number) {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Adicionando favorito...'
+  render()
+
+  try {
+    await criarFavorito(token, petId)
+    state.message = 'Pet adicionado aos favoritos.'
+    await carregarFavoritos()
+  } catch {
+    state.message = 'Nao foi possivel favoritar o pet.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function desfavoritarPet(favoritoId: number) {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Removendo favorito...'
+  render()
+
+  try {
+    await removerFavorito(token, favoritoId)
+    state.favoritos = state.favoritos.filter((favorito) => favorito.id !== favoritoId)
+    state.message = 'Favorito removido.'
+  } catch {
+    state.message = 'Nao foi possivel remover o favorito.'
   } finally {
     state.loading = false
     render()

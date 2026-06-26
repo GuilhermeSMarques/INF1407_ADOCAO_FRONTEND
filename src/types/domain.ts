@@ -61,3 +61,11 @@ export type SolicitacaoAdocao = {
   criado_em: string
   atualizado_em: string
 }
+
+export type Favorito = {
+  id: number
+  usuario: number
+  pet: number
+  pet_nome: string
+  criado_em: string
+}
