@@ -119,6 +119,19 @@ function createFileField(labelText: string, name: string) {
   return createElement('div', { className: 'form-field' }, label, input)
 }
 
+function createTextareaField(labelText: string, name: string, required = true) {
+  const inputId = `field-${name}`
+  const label = createElement('label', { htmlFor: inputId, text: labelText })
+  const textarea = document.createElement('textarea')
+  textarea.id = inputId
+  textarea.name = name
+  textarea.placeholder = labelText
+  textarea.required = required
+  textarea.rows = 4
+
+  return createElement('div', { className: 'form-field' }, label, textarea)
+}
+
 function createHeader() {
   const title = createElement('h1', { text: 'Adocao de Pets' })
   const subtitle = createElement('p', {
@@ -755,7 +768,7 @@ function createPetForm() {
       ['indisponivel', 'Indisponivel'],
     ]),
     createFileField('Foto', 'foto'),
-    createField('Descricao', 'descricao', 'text', false),
+    createTextareaField('Descricao', 'descricao', false),
     createActionButton('primary-button', submitText, 'submit'),
   )
 
@@ -809,7 +822,7 @@ function createPetForm() {
 
 function setFormValue(form: HTMLFormElement, name: string, value: string) {
   const field = form.elements.namedItem(name)
-  if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) {
+  if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement) {
     field.value = value
   }
 }

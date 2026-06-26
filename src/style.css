@@ -171,7 +171,8 @@ button {
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
   width: 100%;
   min-height: 42px;
   border: 1px solid var(--border);
@@ -181,8 +182,14 @@ button {
   background: var(--surface);
 }
 
+.form-field textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
 .form-field input:focus,
-.form-field select:focus {
+.form-field select:focus,
+.form-field textarea:focus {
   outline: 2px solid rgba(23, 107, 99, 0.25);
   border-color: var(--primary);
 }
