@@ -40,8 +40,11 @@ if (!app) {
 
 const root = app
 
+type ActiveView = 'pets' | 'solicitacoes' | 'favoritos' | 'painel'
+
 type AppState = {
   usuario: Usuario | null
+  activeView: ActiveView
   pets: Pet[]
   solicitacoes: SolicitacaoAdocao[]
   favoritos: Favorito[]
@@ -56,6 +59,7 @@ type AppState = {
 
 const state: AppState = {
   usuario: null,
+  activeView: 'pets',
   pets: [],
   solicitacoes: [],
   favoritos: [],
@@ -99,14 +103,24 @@ function createHeader() {
 
 function createNavigation() {
   const nav = createElement('nav', { className: 'app-nav', ariaLabel: 'Navegacao principal' })
-  const labels = ['Pets', 'Minhas solicitacoes', 'Favoritos', 'Painel']
+  const items: Array<[ActiveView, string]> = [
+    ['pets', 'Pets'],
+    ['solicitacoes', 'Solicitacoes'],
+    ['favoritos', 'Favoritos'],
+    ['painel', 'Painel'],
+  ]
 
-  labels.forEach((label, index) => {
-    nav.append(createElement('button', {
-      className: index === 0 ? 'nav-button active' : 'nav-button',
+  items.forEach(([view, label]) => {
+    const button = createElement('button', {
+      className: state.activeView === view ? 'nav-button active' : 'nav-button',
       text: label,
       type: 'button',
-    }))
+    })
+    button.addEventListener('click', () => {
+      state.activeView = view
+      render()
+    })
+    nav.append(button)
   })
 
   return nav
@@ -731,10 +745,7 @@ function createDashboardSection() {
 
 function createMainContent() {
   const apiUrl = createElement('strong', { text: getApiBaseUrl() })
-
-  return createElement(
-    'main',
-    { className: 'app-main' },
+  const sections: Node[] = [
     createElement(
       'section',
       { className: 'status-panel', ariaLabel: 'Status da aplicacao' },
@@ -743,11 +754,28 @@ function createMainContent() {
       createMessage(),
     ),
     createAuthArea(),
-    createPetForm(),
-    createPetsSection(),
-    createSolicitacoesSection(),
-    createFavoritosSection(),
-    createDashboardSection(),
+  ]
+
+  if (state.activeView === 'pets') {
+    sections.push(createPetForm(), createPetsSection())
+  }
+
+  if (state.activeView === 'solicitacoes') {
+    sections.push(createSolicitacoesSection())
+  }
+
+  if (state.activeView === 'favoritos') {
+    sections.push(createFavoritosSection())
+  }
+
+  if (state.activeView === 'painel') {
+    sections.push(createDashboardSection())
+  }
+
+  return createElement(
+    'main',
+    { className: 'app-main' },
+    ...sections,
   )
 }
 
