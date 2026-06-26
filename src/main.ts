@@ -806,7 +806,11 @@ function createPetsSection() {
 
   const list = createElement('div', { className: 'pets-list' })
   if (state.pets.length === 0) {
-    list.append(createElement('p', { className: 'status-text', text: 'Nenhum pet encontrado.' }))
+    const hasFilters = Object.values(state.petFilters).some(Boolean)
+    list.append(createElement('p', {
+      className: 'status-text',
+      text: hasFilters ? 'Nenhum pet encontrado para os filtros informados.' : 'Nenhum pet encontrado.',
+    }))
   } else {
     state.pets.forEach((pet) => list.append(createPetCard(pet)))
   }
@@ -924,7 +928,11 @@ function createSolicitacoesSection() {
   const solicitacoes = getSolicitacoesFiltradas()
 
   if (solicitacoes.length === 0) {
-    list.append(createElement('p', { className: 'status-text', text: 'Nenhuma solicitacao encontrada.' }))
+    const hasFilters = Object.values(state.solicitacaoFilters).some(Boolean)
+    list.append(createElement('p', {
+      className: 'status-text',
+      text: hasFilters ? 'Nenhuma solicitacao encontrada para os filtros informados.' : 'Nenhuma solicitacao encontrada.',
+    }))
   } else {
     solicitacoes.forEach((solicitacao) => list.append(createSolicitacaoCard(solicitacao)))
   }
