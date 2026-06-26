@@ -182,7 +182,11 @@ function createMessage() {
     return createElement('div', { className: 'message empty' })
   }
 
-  return createElement('div', { className: 'message', text: state.message })
+  const message = createElement('div', { className: 'message', text: state.message })
+  message.setAttribute('role', 'status')
+  message.setAttribute('aria-live', 'polite')
+
+  return message
 }
 
 function createActionButton(className: string, text: string, type: 'button' | 'submit' = 'button') {
@@ -620,6 +624,11 @@ function createStatusBadge(status: StatusPet | StatusSolicitacao) {
   })
 }
 
+function createCountBadge(value: number, singular: string, plural: string) {
+  const label = value === 1 ? singular : plural
+  return createElement('span', { className: 'count-badge', text: `${value} ${label}` })
+}
+
 function createDateMeta(label: string, value: string) {
   return createElement(
     'p',
@@ -627,6 +636,16 @@ function createDateMeta(label: string, value: string) {
     createText(`${label}: `),
     createElement('time', { text: formatDateTime(value) }),
   )
+}
+
+function createSectionHeading(title: string, reloadButton: HTMLButtonElement, countBadge?: HTMLElement) {
+  const titleGroup = createElement('div', { className: 'section-title' }, createElement('h2', { text: title }))
+
+  if (countBadge) {
+    titleGroup.append(countBadge)
+  }
+
+  return createElement('div', { className: 'section-heading' }, titleGroup, reloadButton)
 }
 
 function isPetFavorito(petId: number) {
@@ -811,8 +830,9 @@ function createPetsSection() {
   })
 
   const list = createElement('div', { className: 'pets-list' })
+  const hasFilters = Object.values(state.petFilters).some(Boolean)
+
   if (state.pets.length === 0) {
-    const hasFilters = Object.values(state.petFilters).some(Boolean)
     list.append(createElement('p', {
       className: 'status-text',
       text: hasFilters ? 'Nenhum pet encontrado para os filtros informados.' : 'Nenhum pet encontrado.',
@@ -824,7 +844,11 @@ function createPetsSection() {
   return createElement(
     'section',
     { className: 'pets-section', ariaLabel: 'Lista de pets' },
-    createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Pets' }), reloadButton),
+    createSectionHeading(
+      'Pets',
+      reloadButton,
+      createCountBadge(state.pets.length, hasFilters ? 'resultado filtrado' : 'pet', hasFilters ? 'resultados filtrados' : 'pets'),
+    ),
     createPetsFilters(),
     list,
   )
@@ -932,9 +956,9 @@ function createSolicitacoesSection() {
 
   const list = createElement('div', { className: 'pets-list' })
   const solicitacoes = getSolicitacoesFiltradas()
+  const hasFilters = Object.values(state.solicitacaoFilters).some(Boolean)
 
   if (solicitacoes.length === 0) {
-    const hasFilters = Object.values(state.solicitacaoFilters).some(Boolean)
     list.append(createElement('p', {
       className: 'status-text',
       text: hasFilters ? 'Nenhuma solicitacao encontrada para os filtros informados.' : 'Nenhuma solicitacao encontrada.',
@@ -946,7 +970,11 @@ function createSolicitacoesSection() {
   return createElement(
     'section',
     { className: 'pets-section', ariaLabel: 'Solicitacoes de adocao' },
-    createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Solicitacoes' }), reloadButton),
+    createSectionHeading(
+      'Solicitacoes',
+      reloadButton,
+      createCountBadge(solicitacoes.length, hasFilters ? 'resultado filtrado' : 'solicitacao', hasFilters ? 'resultados filtrados' : 'solicitacoes'),
+    ),
     createSolicitacoesFilters(),
     list,
   )
@@ -992,7 +1020,7 @@ function createFavoritosSection() {
   return createElement(
     'section',
     { className: 'pets-section', ariaLabel: 'Favoritos' },
-    createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Favoritos' }), reloadButton),
+    createSectionHeading('Favoritos', reloadButton, createCountBadge(state.favoritos.length, 'favorito', 'favoritos')),
     list,
   )
 }
@@ -1034,7 +1062,7 @@ function createDashboardSection() {
   return createElement(
     'section',
     { className: 'pets-section', ariaLabel: 'Painel resumido' },
-    createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Painel' }), reloadButton),
+    createSectionHeading('Painel', reloadButton),
     metrics,
   )
 }
