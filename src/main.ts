@@ -178,6 +178,13 @@ function createMessage() {
   return createElement('div', { className: 'message', text: state.message })
 }
 
+function createActionButton(className: string, text: string, type: 'button' | 'submit' = 'button') {
+  const button = createElement('button', { className, text, type })
+  button.disabled = state.loading
+
+  return button
+}
+
 function extractErrorMessage(data: unknown): string | null {
   if (!data) {
     return null
@@ -226,7 +233,7 @@ function createLoginForm() {
     createElement('h2', { text: 'Entrar' }),
     createField('Email', 'email', 'email'),
     createField('Senha', 'password', 'password'),
-    createElement('button', { className: 'primary-button', text: 'Entrar', type: 'submit' }),
+    createActionButton('primary-button', 'Entrar', 'submit'),
   )
 
   form.addEventListener('submit', async (event) => {
@@ -281,7 +288,7 @@ function createRegisterForm() {
 
   tipoSelect.append(adotanteOption, responsavelOption)
   form.append(createElement('div', { className: 'form-field' }, tipoLabel, tipoSelect))
-  form.append(createElement('button', { className: 'secondary-button', text: 'Cadastrar', type: 'submit' }))
+  form.append(createActionButton('secondary-button', 'Cadastrar', 'submit'))
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault()
@@ -315,7 +322,7 @@ function createPasswordResetArea() {
     { className: 'auth-form' },
     createElement('h2', { text: 'Recuperar senha' }),
     createField('Email', 'email', 'email'),
-    createElement('button', { className: 'secondary-button', text: 'Gerar recuperacao', type: 'submit' }),
+    createActionButton('secondary-button', 'Gerar recuperacao', 'submit'),
   )
 
   requestForm.addEventListener('submit', async (event) => {
@@ -346,7 +353,7 @@ function createPasswordResetArea() {
     createField('UID', 'uid'),
     createField('Token', 'token'),
     createField('Nova senha', 'nova_senha', 'password'),
-    createElement('button', { className: 'secondary-button', text: 'Redefinir senha', type: 'submit' }),
+    createActionButton('secondary-button', 'Redefinir senha', 'submit'),
   )
 
   setFormValue(confirmForm, 'uid', state.resetUid)
@@ -385,7 +392,7 @@ function createChangePasswordForm() {
     createElement('h2', { text: 'Alterar senha' }),
     createField('Senha atual', 'senha_atual', 'password'),
     createField('Nova senha', 'nova_senha', 'password'),
-    createElement('button', { className: 'secondary-button', text: 'Alterar senha', type: 'submit' }),
+    createActionButton('secondary-button', 'Alterar senha', 'submit'),
   )
 
   form.addEventListener('submit', async (event) => {
@@ -414,7 +421,7 @@ function createChangePasswordForm() {
 }
 
 function createUserPanel(usuario: Usuario) {
-  const logoutButton = createElement('button', { className: 'secondary-button', text: 'Sair', type: 'button' })
+  const logoutButton = createActionButton('secondary-button', 'Sair')
   logoutButton.addEventListener('click', () => {
     clearSession()
     state.usuario = null
@@ -519,7 +526,7 @@ function createPetsFilters() {
       ['medio', 'Medio'],
       ['grande', 'Grande'],
     ]),
-    createElement('button', { className: 'secondary-button', text: 'Filtrar', type: 'submit' }),
+    createActionButton('secondary-button', 'Filtrar', 'submit'),
   )
 
   form.addEventListener('submit', async (event) => {
@@ -561,14 +568,14 @@ function createPetCard(pet: Pet) {
   }
 
   if (state.usuario?.tipo_usuario === 'responsavel') {
-    const editButton = createElement('button', { className: 'secondary-button', text: 'Editar', type: 'button' })
+    const editButton = createActionButton('secondary-button', 'Editar')
     editButton.addEventListener('click', () => {
       state.editingPet = pet
       state.message = `Editando ${pet.nome}.`
       render()
     })
 
-    const deleteButton = createElement('button', { className: 'danger-button', text: 'Excluir', type: 'button' })
+    const deleteButton = createActionButton('danger-button', 'Excluir')
     deleteButton.addEventListener('click', () => {
       void removerPet(pet.id)
     })
@@ -576,12 +583,12 @@ function createPetCard(pet: Pet) {
   }
 
   if (state.usuario?.tipo_usuario === 'adotante' && pet.status === 'disponivel') {
-    const favoriteButton = createElement('button', { className: 'secondary-button', text: 'Favoritar', type: 'button' })
+    const favoriteButton = createActionButton('secondary-button', 'Favoritar')
     favoriteButton.addEventListener('click', () => {
       void favoritarPet(pet.id)
     })
 
-    const requestButton = createElement('button', { className: 'primary-button', text: 'Solicitar adocao', type: 'button' })
+    const requestButton = createActionButton('primary-button', 'Solicitar adocao')
     requestButton.addEventListener('click', () => {
       void solicitarAdocao(pet.id)
     })
@@ -630,7 +637,7 @@ function createPetForm() {
     ]),
     createFileField('Foto', 'foto'),
     createField('Descricao', 'descricao', 'text', false),
-    createElement('button', { className: 'primary-button', text: submitText, type: 'submit' }),
+    createActionButton('primary-button', submitText, 'submit'),
   )
 
   if (editingPet) {
@@ -643,7 +650,7 @@ function createPetForm() {
     setFormValue(form, 'status', editingPet.status)
     setFormValue(form, 'descricao', editingPet.descricao)
 
-    const cancelButton = createElement('button', { className: 'secondary-button', text: 'Cancelar edicao', type: 'button' })
+    const cancelButton = createActionButton('secondary-button', 'Cancelar edicao')
     cancelButton.addEventListener('click', () => {
       state.editingPet = null
       state.message = ''
@@ -698,7 +705,7 @@ function createPetsSection() {
     )
   }
 
-  const reloadButton = createElement('button', { className: 'secondary-button', text: 'Atualizar pets', type: 'button' })
+  const reloadButton = createActionButton('secondary-button', 'Atualizar pets')
   reloadButton.addEventListener('click', () => {
     void carregarPets()
   })
@@ -727,7 +734,7 @@ function createSolicitacaoCard(solicitacao: SolicitacaoAdocao) {
   ]
 
   if (state.usuario?.tipo_usuario === 'adotante' && solicitacao.status === 'pendente') {
-    const cancelButton = createElement('button', { className: 'danger-button', text: 'Cancelar', type: 'button' })
+    const cancelButton = createActionButton('danger-button', 'Cancelar')
     cancelButton.addEventListener('click', () => {
       void cancelarAdocao(solicitacao.id)
     })
@@ -735,12 +742,12 @@ function createSolicitacaoCard(solicitacao: SolicitacaoAdocao) {
   }
 
   if (state.usuario?.tipo_usuario === 'responsavel' && solicitacao.status === 'pendente') {
-    const approveButton = createElement('button', { className: 'primary-button', text: 'Aprovar', type: 'button' })
+    const approveButton = createActionButton('primary-button', 'Aprovar')
     approveButton.addEventListener('click', () => {
       void decidirSolicitacao(solicitacao.id, 'aprovar')
     })
 
-    const rejectButton = createElement('button', { className: 'danger-button', text: 'Recusar', type: 'button' })
+    const rejectButton = createActionButton('danger-button', 'Recusar')
     rejectButton.addEventListener('click', () => {
       void decidirSolicitacao(solicitacao.id, 'recusar')
     })
@@ -756,7 +763,7 @@ function createSolicitacoesSection() {
     return createElement('div', { className: 'empty' })
   }
 
-  const reloadButton = createElement('button', { className: 'secondary-button', text: 'Atualizar', type: 'button' })
+  const reloadButton = createActionButton('secondary-button', 'Atualizar')
   reloadButton.addEventListener('click', () => {
     void carregarSolicitacoes()
   })
@@ -777,7 +784,7 @@ function createSolicitacoesSection() {
 }
 
 function createFavoritoCard(favorito: Favorito) {
-  const removeButton = createElement('button', { className: 'danger-button', text: 'Remover', type: 'button' })
+  const removeButton = createActionButton('danger-button', 'Remover')
   removeButton.addEventListener('click', () => {
     void desfavoritarPet(favorito.id)
   })
@@ -796,7 +803,7 @@ function createFavoritosSection() {
     return createElement('div', { className: 'empty' })
   }
 
-  const reloadButton = createElement('button', { className: 'secondary-button', text: 'Atualizar', type: 'button' })
+  const reloadButton = createActionButton('secondary-button', 'Atualizar')
   reloadButton.addEventListener('click', () => {
     void carregarFavoritos()
   })
@@ -830,7 +837,7 @@ function createDashboardSection() {
     return createElement('div', { className: 'empty' })
   }
 
-  const reloadButton = createElement('button', { className: 'secondary-button', text: 'Atualizar', type: 'button' })
+  const reloadButton = createActionButton('secondary-button', 'Atualizar')
   reloadButton.addEventListener('click', () => {
     void carregarDashboard()
   })

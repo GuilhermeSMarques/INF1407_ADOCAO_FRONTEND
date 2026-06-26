@@ -206,6 +206,11 @@ button {
   background: var(--primary-strong);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .secondary-button {
   color: var(--primary-strong);
   background: var(--surface-muted);
