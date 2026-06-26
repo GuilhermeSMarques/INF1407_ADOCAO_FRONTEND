@@ -27,6 +27,7 @@ import type {
   PetPayload,
   SolicitacaoAdocao,
   StatusPet,
+  StatusSolicitacao,
   TipoUsuario,
   Usuario,
 } from './types/domain'
@@ -42,12 +43,17 @@ const root = app
 
 type ActiveView = 'pets' | 'solicitacoes' | 'favoritos' | 'painel'
 type NavigationItem = [ActiveView, string]
+type SolicitacaoFilters = {
+  search?: string
+  status?: StatusSolicitacao | ''
+}
 
 type AppState = {
   usuario: Usuario | null
   activeView: ActiveView
   pets: Pet[]
   solicitacoes: SolicitacaoAdocao[]
+  solicitacaoFilters: SolicitacaoFilters
   favoritos: Favorito[]
   dashboard: DashboardResumo | null
   petFilters: PetFilters
@@ -63,6 +69,7 @@ const state: AppState = {
   activeView: 'pets',
   pets: [],
   solicitacoes: [],
+  solicitacaoFilters: {},
   favoritos: [],
   dashboard: null,
   petFilters: {},
@@ -431,6 +438,7 @@ function createUserPanel(usuario: Usuario) {
     state.usuario = null
     state.pets = []
     state.solicitacoes = []
+    state.solicitacaoFilters = {}
     state.favoritos = []
     state.dashboard = null
     state.editingPet = null
@@ -773,6 +781,54 @@ function createPetsSection() {
   )
 }
 
+function getSolicitacoesFiltradas() {
+  const search = state.solicitacaoFilters.search?.toLowerCase() ?? ''
+  const status = state.solicitacaoFilters.status
+
+  return state.solicitacoes.filter((solicitacao) => {
+    const matchesSearch = !search || solicitacao.pet_nome.toLowerCase().includes(search)
+    const matchesStatus = !status || solicitacao.status === status
+
+    return matchesSearch && matchesStatus
+  })
+}
+
+function createSolicitacoesFilters() {
+  const form = createElement(
+    'form',
+    { className: 'filters-form compact-filters' },
+    createField('Busca por pet', 'search', 'search', false),
+    createFilterSelect('status', 'Status', [
+      ['', 'Todos'],
+      ['pendente', 'Pendente'],
+      ['aprovada', 'Aprovada'],
+      ['recusada', 'Recusada'],
+      ['cancelada', 'Cancelada'],
+    ]),
+    createActionButton('secondary-button', 'Filtrar', 'submit'),
+  )
+  const clearButton = createActionButton('secondary-button', 'Limpar filtros')
+  clearButton.addEventListener('click', () => {
+    state.solicitacaoFilters = {}
+    render()
+  })
+  form.append(clearButton)
+
+  setFormValue(form, 'search', state.solicitacaoFilters.search ?? '')
+  setFormValue(form, 'status', state.solicitacaoFilters.status ?? '')
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault()
+    state.solicitacaoFilters = {
+      search: getInput(form, 'search'),
+      status: getInput(form, 'status') as StatusSolicitacao | '',
+    }
+    render()
+  })
+
+  return form
+}
+
 function createSolicitacaoCard(solicitacao: SolicitacaoAdocao) {
   const children: Node[] = [
     createElement('h3', { text: solicitacao.pet_nome }),
@@ -824,16 +880,19 @@ function createSolicitacoesSection() {
   })
 
   const list = createElement('div', { className: 'pets-list' })
-  if (state.solicitacoes.length === 0) {
+  const solicitacoes = getSolicitacoesFiltradas()
+
+  if (solicitacoes.length === 0) {
     list.append(createElement('p', { className: 'status-text', text: 'Nenhuma solicitacao encontrada.' }))
   } else {
-    state.solicitacoes.forEach((solicitacao) => list.append(createSolicitacaoCard(solicitacao)))
+    solicitacoes.forEach((solicitacao) => list.append(createSolicitacaoCard(solicitacao)))
   }
 
   return createElement(
     'section',
     { className: 'pets-section', ariaLabel: 'Solicitacoes de adocao' },
     createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Solicitacoes' }), reloadButton),
+    createSolicitacoesFilters(),
     list,
   )
 }

@@ -362,4 +362,8 @@ button:disabled {
     grid-template-columns: 1.4fr 1fr 1fr 1fr auto;
     align-items: end;
   }
+
+  .compact-filters {
+    grid-template-columns: 1.4fr 1fr auto auto;
+  }
 }
