@@ -1,60 +1,70 @@
 import './style.css'
-import typescriptLogo from './assets/typescript.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import { setupCounter } from './counter.ts'
+import { getApiBaseUrl } from './api/client'
+import { createElement, createText } from './utils/dom'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${typescriptLogo}" class="framework" alt="TypeScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.ts</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+const app = document.querySelector<HTMLDivElement>('#app')
 
-<div class="ticks"></div>
+if (!app) {
+  throw new Error('Elemento #app nao encontrado.')
+}
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://www.typescriptlang.org" target="_blank">
-          <img class="button-icon" src="${typescriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+function createHeader() {
+  const title = createElement('h1', { text: 'Adocao de Pets' })
+  const subtitle = createElement('p', {
+    className: 'app-subtitle',
+    text: 'Painel inicial da plataforma academica de adocao.',
+  })
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+  const header = createElement('header', { className: 'app-header' }, title, subtitle)
+  return header
+}
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+function createNavigation() {
+  const nav = createElement('nav', { className: 'app-nav', ariaLabel: 'Navegacao principal' })
+  const labels = ['Pets', 'Minhas solicitacoes', 'Favoritos', 'Painel']
+
+  labels.forEach((label, index) => {
+    const button = createElement('button', {
+      className: index === 0 ? 'nav-button active' : 'nav-button',
+      text: label,
+      type: 'button',
+    })
+    nav.append(button)
+  })
+
+  return nav
+}
+
+function createStatusPanel() {
+  const apiUrl = createElement('strong', { text: getApiBaseUrl() })
+  const apiText = createElement('p', { className: 'status-text' }, createText('API configurada: '), apiUrl)
+
+  return createElement(
+    'section',
+    { className: 'status-panel', ariaLabel: 'Status da aplicacao' },
+    createElement('h2', { text: 'Preparacao do frontend' }),
+    apiText,
+    createElement('p', {
+      className: 'status-text',
+      text: 'Estrutura inicial criada sem innerHTML e pronta para consumir a API.',
+    }),
+  )
+}
+
+function createMainContent() {
+  return createElement(
+    'main',
+    { className: 'app-main' },
+    createStatusPanel(),
+    createElement(
+      'section',
+      { className: 'empty-state', ariaLabel: 'Proximas telas' },
+      createElement('h2', { text: 'Proximos passos' }),
+      createElement('p', {
+        text: 'As proximas telas vao conectar login, pets, solicitacoes, favoritos e painel.',
+      }),
+    ),
+  )
+}
+
+app.replaceChildren(createHeader(), createNavigation(), createMainContent())
