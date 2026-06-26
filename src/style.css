@@ -291,7 +291,38 @@ button {
 .card-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 12px;
+}
+
+.metrics-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.metric-card {
+  min-height: 86px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--surface-muted);
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+.metric-value {
+  color: var(--primary-strong);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.metric-label {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 650;
 }
 
 @media (min-width: 800px) {

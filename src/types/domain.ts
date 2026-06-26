@@ -69,3 +69,13 @@ export type Favorito = {
   pet_nome: string
   criado_em: string
 }
+
+export type DashboardResumo = {
+  total_pets: number
+  pets_disponiveis: number
+  pets_adotados: number
+  solicitacoes_pendentes: number
+  solicitacoes_aprovadas: number
+  solicitacoes_recusadas: number
+  favoritos: number
+}

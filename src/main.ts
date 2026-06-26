@@ -2,6 +2,7 @@ import './style.css'
 import { getApiBaseUrl } from './api/client'
 import { clearSession, getAccessToken, saveTokens } from './auth/session'
 import { buscarUsuarioAtual, login, registrar } from './services/authService'
+import { buscarDashboard } from './services/dashboardService'
 import { criarFavorito, listarFavoritos, removerFavorito } from './services/favoritoService'
 import { atualizarPet, criarPet, excluirPet, listarPets } from './services/petService'
 import {
@@ -11,7 +12,17 @@ import {
   listarSolicitacoes,
   recusarSolicitacao,
 } from './services/solicitacaoService'
-import type { Favorito, Pet, PetFilters, PetPayload, SolicitacaoAdocao, StatusPet, TipoUsuario, Usuario } from './types/domain'
+import type {
+  DashboardResumo,
+  Favorito,
+  Pet,
+  PetFilters,
+  PetPayload,
+  SolicitacaoAdocao,
+  StatusPet,
+  TipoUsuario,
+  Usuario,
+} from './types/domain'
 import { createElement, createText } from './utils/dom'
 
 const app = document.querySelector<HTMLDivElement>('#app')
@@ -27,6 +38,7 @@ type AppState = {
   pets: Pet[]
   solicitacoes: SolicitacaoAdocao[]
   favoritos: Favorito[]
+  dashboard: DashboardResumo | null
   petFilters: PetFilters
   editingPet: Pet | null
   loading: boolean
@@ -38,6 +50,7 @@ const state: AppState = {
   pets: [],
   solicitacoes: [],
   favoritos: [],
+  dashboard: null,
   petFilters: {},
   editingPet: null,
   loading: false,
@@ -194,6 +207,7 @@ function createUserPanel(usuario: Usuario) {
     state.pets = []
     state.solicitacoes = []
     state.favoritos = []
+    state.dashboard = null
     state.editingPet = null
     state.message = 'Sessao encerrada.'
     render()
@@ -556,6 +570,48 @@ function createFavoritosSection() {
   )
 }
 
+function createMetric(label: string, value: number) {
+  return createElement(
+    'div',
+    { className: 'metric-card' },
+    createElement('span', { className: 'metric-value', text: String(value) }),
+    createElement('span', { className: 'metric-label', text: label }),
+  )
+}
+
+function createDashboardSection() {
+  if (!state.usuario) {
+    return createElement('div', { className: 'empty' })
+  }
+
+  const reloadButton = createElement('button', { className: 'secondary-button', text: 'Atualizar', type: 'button' })
+  reloadButton.addEventListener('click', () => {
+    void carregarDashboard()
+  })
+
+  const metrics = createElement('div', { className: 'metrics-grid' })
+  if (!state.dashboard) {
+    metrics.append(createElement('p', { className: 'status-text', text: 'Painel ainda nao carregado.' }))
+  } else {
+    metrics.append(
+      createMetric('Pets', state.dashboard.total_pets),
+      createMetric('Disponiveis', state.dashboard.pets_disponiveis),
+      createMetric('Adotados', state.dashboard.pets_adotados),
+      createMetric('Pendentes', state.dashboard.solicitacoes_pendentes),
+      createMetric('Aprovadas', state.dashboard.solicitacoes_aprovadas),
+      createMetric('Recusadas', state.dashboard.solicitacoes_recusadas),
+      createMetric('Favoritos', state.dashboard.favoritos),
+    )
+  }
+
+  return createElement(
+    'section',
+    { className: 'pets-section', ariaLabel: 'Painel resumido' },
+    createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Painel' }), reloadButton),
+    metrics,
+  )
+}
+
 function createMainContent() {
   const apiUrl = createElement('strong', { text: getApiBaseUrl() })
 
@@ -574,6 +630,7 @@ function createMainContent() {
     createPetsSection(),
     createSolicitacoesSection(),
     createFavoritosSection(),
+    createDashboardSection(),
   )
 }
 
@@ -609,6 +666,7 @@ async function carregarDadosPrincipais() {
   await carregarPets()
   await carregarSolicitacoes()
   await carregarFavoritos()
+  await carregarDashboard()
 }
 
 async function carregarPets() {
@@ -626,6 +684,27 @@ async function carregarPets() {
     state.message = 'Pets carregados.'
   } catch {
     state.message = 'Nao foi possivel carregar os pets.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function carregarDashboard() {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Carregando painel...'
+  render()
+
+  try {
+    state.dashboard = await buscarDashboard(token)
+    state.message = 'Painel carregado.'
+  } catch {
+    state.message = 'Nao foi possivel carregar o painel.'
   } finally {
     state.loading = false
     render()
@@ -688,6 +767,7 @@ async function favoritarPet(petId: number) {
     await criarFavorito(token, petId)
     state.message = 'Pet adicionado aos favoritos.'
     await carregarFavoritos()
+    await carregarDashboard()
   } catch {
     state.message = 'Nao foi possivel favoritar o pet.'
   } finally {
@@ -710,6 +790,7 @@ async function desfavoritarPet(favoritoId: number) {
     await removerFavorito(token, favoritoId)
     state.favoritos = state.favoritos.filter((favorito) => favorito.id !== favoritoId)
     state.message = 'Favorito removido.'
+    await carregarDashboard()
   } catch {
     state.message = 'Nao foi possivel remover o favorito.'
   } finally {
@@ -733,6 +814,7 @@ async function cadastrarPet(payload: PetPayload) {
     state.editingPet = null
     state.message = 'Pet cadastrado.'
     await carregarPets()
+    await carregarDashboard()
   } catch {
     state.message = 'Nao foi possivel cadastrar o pet.'
   } finally {
@@ -755,6 +837,7 @@ async function solicitarAdocao(petId: number) {
     await criarSolicitacao(token, petId, 'Tenho interesse em adotar este pet.')
     state.message = 'Solicitacao enviada.'
     await carregarSolicitacoes()
+    await carregarDashboard()
   } catch {
     state.message = 'Nao foi possivel enviar a solicitacao.'
   } finally {
@@ -777,6 +860,7 @@ async function cancelarAdocao(solicitacaoId: number) {
     await cancelarSolicitacao(token, solicitacaoId)
     state.solicitacoes = state.solicitacoes.filter((solicitacao) => solicitacao.id !== solicitacaoId)
     state.message = 'Solicitacao cancelada.'
+    await carregarDashboard()
   } catch {
     state.message = 'Nao foi possivel cancelar a solicitacao.'
   } finally {
@@ -806,6 +890,7 @@ async function decidirSolicitacao(solicitacaoId: number, decisao: 'aprovar' | 'r
     if (decisao === 'aprovar') {
       await carregarPets()
     }
+    await carregarDashboard()
   } catch {
     state.message = 'Nao foi possivel atualizar a solicitacao.'
   } finally {
@@ -829,6 +914,7 @@ async function salvarPet(petId: number, payload: PetPayload) {
     state.pets = state.pets.map((pet) => (pet.id === petAtualizado.id ? petAtualizado : pet))
     state.editingPet = null
     state.message = 'Pet atualizado.'
+    await carregarDashboard()
   } catch {
     state.message = 'Nao foi possivel atualizar o pet.'
   } finally {
@@ -854,6 +940,7 @@ async function removerPet(petId: number) {
       state.editingPet = null
     }
     state.message = 'Pet excluido.'
+    await carregarDashboard()
   } catch {
     state.message = 'Nao foi possivel excluir o pet.'
   } finally {
