@@ -1072,10 +1072,12 @@ async function favoritarPet(petId: number) {
   render()
 
   try {
-    await criarFavorito(token, petId)
-    state.message = 'Pet adicionado aos favoritos.'
-    await carregarFavoritos()
+    const favorito = await criarFavorito(token, petId)
+    if (!state.favoritos.some((item) => item.id === favorito.id)) {
+      state.favoritos = [...state.favoritos, favorito]
+    }
     await carregarDashboard()
+    state.message = 'Pet adicionado aos favoritos.'
   } catch (error) {
     state.message = getErrorMessage(error, 'Nao foi possivel favoritar o pet.')
   } finally {
@@ -1142,10 +1144,10 @@ async function solicitarAdocao(petId: number) {
   render()
 
   try {
-    await criarSolicitacao(token, petId, 'Tenho interesse em adotar este pet.')
-    state.message = 'Solicitacao enviada.'
-    await carregarSolicitacoes()
+    const solicitacao = await criarSolicitacao(token, petId, 'Tenho interesse em adotar este pet.')
+    state.solicitacoes = [...state.solicitacoes, solicitacao]
     await carregarDashboard()
+    state.message = 'Solicitacao enviada.'
   } catch (error) {
     state.message = getErrorMessage(error, 'Nao foi possivel enviar a solicitacao.')
   } finally {
