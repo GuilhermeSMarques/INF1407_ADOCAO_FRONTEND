@@ -30,3 +30,11 @@ export function excluirPet(token: string, petId: number) {
     token,
   })
 }
+
+export function atualizarPet(token: string, petId: number, payload: PetPayload) {
+  return apiRequest<Pet>(`/api/pets/${petId}/`, {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify(payload),
+  })
+}

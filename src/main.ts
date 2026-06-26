@@ -2,7 +2,7 @@ import './style.css'
 import { getApiBaseUrl } from './api/client'
 import { clearSession, getAccessToken, saveTokens } from './auth/session'
 import { buscarUsuarioAtual, login, registrar } from './services/authService'
-import { criarPet, excluirPet, listarPets } from './services/petService'
+import { atualizarPet, criarPet, excluirPet, listarPets } from './services/petService'
 import type { Pet, PetFilters, PetPayload, StatusPet, TipoUsuario, Usuario } from './types/domain'
 import { createElement, createText } from './utils/dom'
 
@@ -18,6 +18,7 @@ type AppState = {
   usuario: Usuario | null
   pets: Pet[]
   petFilters: PetFilters
+  editingPet: Pet | null
   loading: boolean
   message: string
 }
@@ -26,6 +27,7 @@ const state: AppState = {
   usuario: null,
   pets: [],
   petFilters: {},
+  editingPet: null,
   loading: false,
   message: '',
 }
@@ -178,6 +180,7 @@ function createUserPanel(usuario: Usuario) {
     clearSession()
     state.usuario = null
     state.pets = []
+    state.editingPet = null
     state.message = 'Sessao encerrada.'
     render()
   })
@@ -286,11 +289,18 @@ function createPetCard(pet: Pet) {
   ]
 
   if (state.usuario?.tipo_usuario === 'responsavel') {
+    const editButton = createElement('button', { className: 'secondary-button', text: 'Editar', type: 'button' })
+    editButton.addEventListener('click', () => {
+      state.editingPet = pet
+      state.message = `Editando ${pet.nome}.`
+      render()
+    })
+
     const deleteButton = createElement('button', { className: 'danger-button', text: 'Excluir', type: 'button' })
     deleteButton.addEventListener('click', () => {
       void removerPet(pet.id)
     })
-    children.push(createElement('div', { className: 'card-actions' }, deleteButton))
+    children.push(createElement('div', { className: 'card-actions' }, editButton, deleteButton))
   }
 
   return createElement('article', { className: 'pet-card' }, ...children)
@@ -301,10 +311,14 @@ function createPetForm() {
     return createElement('div', { className: 'empty' })
   }
 
+  const editingPet = state.editingPet
+  const title = editingPet ? 'Editar pet' : 'Cadastrar pet'
+  const submitText = editingPet ? 'Salvar alteracoes' : 'Cadastrar pet'
+
   const form = createElement(
     'form',
     { className: 'pet-form' },
-    createElement('h2', { text: 'Cadastrar pet' }),
+    createElement('h2', { text: title }),
     createField('Nome', 'nome'),
     createSelect('especie', 'Especie', [
       ['cachorro', 'Cachorro'],
@@ -330,12 +344,31 @@ function createPetForm() {
       ['indisponivel', 'Indisponivel'],
     ]),
     createField('Descricao', 'descricao', 'text', false),
-    createElement('button', { className: 'primary-button', text: 'Cadastrar pet', type: 'submit' }),
+    createElement('button', { className: 'primary-button', text: submitText, type: 'submit' }),
   )
+
+  if (editingPet) {
+    setFormValue(form, 'nome', editingPet.nome)
+    setFormValue(form, 'especie', editingPet.especie)
+    setFormValue(form, 'raca', editingPet.raca)
+    setFormValue(form, 'idade', editingPet.idade ? String(editingPet.idade) : '')
+    setFormValue(form, 'sexo', editingPet.sexo)
+    setFormValue(form, 'porte', editingPet.porte)
+    setFormValue(form, 'status', editingPet.status)
+    setFormValue(form, 'descricao', editingPet.descricao)
+
+    const cancelButton = createElement('button', { className: 'secondary-button', text: 'Cancelar edicao', type: 'button' })
+    cancelButton.addEventListener('click', () => {
+      state.editingPet = null
+      state.message = ''
+      render()
+    })
+    form.append(cancelButton)
+  }
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault()
-    await cadastrarPet({
+    const payload = {
       nome: getInput(form, 'nome'),
       especie: getInput(form, 'especie'),
       raca: getInput(form, 'raca'),
@@ -344,7 +377,14 @@ function createPetForm() {
       porte: getInput(form, 'porte'),
       status: getInput(form, 'status') as StatusPet,
       descricao: getInput(form, 'descricao'),
-    })
+    }
+
+    if (state.editingPet) {
+      await salvarPet(state.editingPet.id, payload)
+      return
+    }
+
+    await cadastrarPet(payload)
   })
 
   return createElement(
@@ -352,6 +392,13 @@ function createPetForm() {
     { className: 'pets-section', ariaLabel: 'Cadastro de pet' },
     form,
   )
+}
+
+function setFormValue(form: HTMLFormElement, name: string, value: string) {
+  const field = form.elements.namedItem(name)
+  if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) {
+    field.value = value
+  }
 }
 
 function createPetsSection() {
@@ -465,10 +512,34 @@ async function cadastrarPet(payload: PetPayload) {
 
   try {
     await criarPet(token, payload)
+    state.editingPet = null
     state.message = 'Pet cadastrado.'
     await carregarPets()
   } catch {
     state.message = 'Nao foi possivel cadastrar o pet.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function salvarPet(petId: number, payload: PetPayload) {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Salvando pet...'
+  render()
+
+  try {
+    const petAtualizado = await atualizarPet(token, petId, payload)
+    state.pets = state.pets.map((pet) => (pet.id === petAtualizado.id ? petAtualizado : pet))
+    state.editingPet = null
+    state.message = 'Pet atualizado.'
+  } catch {
+    state.message = 'Nao foi possivel atualizar o pet.'
   } finally {
     state.loading = false
     render()
@@ -488,6 +559,9 @@ async function removerPet(petId: number) {
   try {
     await excluirPet(token, petId)
     state.pets = state.pets.filter((pet) => pet.id !== petId)
+    if (state.editingPet?.id === petId) {
+      state.editingPet = null
+    }
     state.message = 'Pet excluido.'
   } catch {
     state.message = 'Nao foi possivel excluir o pet.'
