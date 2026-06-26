@@ -586,10 +586,16 @@ function createPetPhoto(pet: Pet) {
 }
 
 function formatDateTime(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Nao informado'
+  }
+
   return new Intl.DateTimeFormat('pt-BR', {
     dateStyle: 'short',
     timeStyle: 'short',
-  }).format(new Date(value))
+  }).format(date)
 }
 
 function formatStatus(value: StatusPet | StatusSolicitacao) {
