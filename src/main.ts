@@ -3,7 +3,14 @@ import { getApiBaseUrl } from './api/client'
 import { clearSession, getAccessToken, saveTokens } from './auth/session'
 import { buscarUsuarioAtual, login, registrar } from './services/authService'
 import { atualizarPet, criarPet, excluirPet, listarPets } from './services/petService'
-import type { Pet, PetFilters, PetPayload, StatusPet, TipoUsuario, Usuario } from './types/domain'
+import {
+  aprovarSolicitacao,
+  cancelarSolicitacao,
+  criarSolicitacao,
+  listarSolicitacoes,
+  recusarSolicitacao,
+} from './services/solicitacaoService'
+import type { Pet, PetFilters, PetPayload, SolicitacaoAdocao, StatusPet, TipoUsuario, Usuario } from './types/domain'
 import { createElement, createText } from './utils/dom'
 
 const app = document.querySelector<HTMLDivElement>('#app')
@@ -17,6 +24,7 @@ const root = app
 type AppState = {
   usuario: Usuario | null
   pets: Pet[]
+  solicitacoes: SolicitacaoAdocao[]
   petFilters: PetFilters
   editingPet: Pet | null
   loading: boolean
@@ -26,6 +34,7 @@ type AppState = {
 const state: AppState = {
   usuario: null,
   pets: [],
+  solicitacoes: [],
   petFilters: {},
   editingPet: null,
   loading: false,
@@ -108,7 +117,7 @@ function createLoginForm() {
       saveTokens(tokens)
       state.usuario = await buscarUsuarioAtual(tokens.access)
       state.message = 'Login realizado com sucesso.'
-      await carregarPets()
+      await carregarDadosPrincipais()
     } catch {
       state.message = 'Nao foi possivel fazer login.'
     } finally {
@@ -180,6 +189,7 @@ function createUserPanel(usuario: Usuario) {
     clearSession()
     state.usuario = null
     state.pets = []
+    state.solicitacoes = []
     state.editingPet = null
     state.message = 'Sessao encerrada.'
     render()
@@ -301,6 +311,14 @@ function createPetCard(pet: Pet) {
       void removerPet(pet.id)
     })
     children.push(createElement('div', { className: 'card-actions' }, editButton, deleteButton))
+  }
+
+  if (state.usuario?.tipo_usuario === 'adotante' && pet.status === 'disponivel') {
+    const requestButton = createElement('button', { className: 'primary-button', text: 'Solicitar adocao', type: 'button' })
+    requestButton.addEventListener('click', () => {
+      void solicitarAdocao(pet.id)
+    })
+    children.push(createElement('div', { className: 'card-actions' }, requestButton))
   }
 
   return createElement('article', { className: 'pet-card' }, ...children)
@@ -432,6 +450,63 @@ function createPetsSection() {
   )
 }
 
+function createSolicitacaoCard(solicitacao: SolicitacaoAdocao) {
+  const children: Node[] = [
+    createElement('h3', { text: solicitacao.pet_nome }),
+    createElement('p', { className: 'pet-meta' }, createText(`Status: ${solicitacao.status}`)),
+    createElement('p', { className: 'pet-description', text: solicitacao.mensagem || 'Sem mensagem.' }),
+  ]
+
+  if (state.usuario?.tipo_usuario === 'adotante' && solicitacao.status === 'pendente') {
+    const cancelButton = createElement('button', { className: 'danger-button', text: 'Cancelar', type: 'button' })
+    cancelButton.addEventListener('click', () => {
+      void cancelarAdocao(solicitacao.id)
+    })
+    children.push(createElement('div', { className: 'card-actions' }, cancelButton))
+  }
+
+  if (state.usuario?.tipo_usuario === 'responsavel' && solicitacao.status === 'pendente') {
+    const approveButton = createElement('button', { className: 'primary-button', text: 'Aprovar', type: 'button' })
+    approveButton.addEventListener('click', () => {
+      void decidirSolicitacao(solicitacao.id, 'aprovar')
+    })
+
+    const rejectButton = createElement('button', { className: 'danger-button', text: 'Recusar', type: 'button' })
+    rejectButton.addEventListener('click', () => {
+      void decidirSolicitacao(solicitacao.id, 'recusar')
+    })
+
+    children.push(createElement('div', { className: 'card-actions' }, approveButton, rejectButton))
+  }
+
+  return createElement('article', { className: 'pet-card' }, ...children)
+}
+
+function createSolicitacoesSection() {
+  if (!state.usuario) {
+    return createElement('div', { className: 'empty' })
+  }
+
+  const reloadButton = createElement('button', { className: 'secondary-button', text: 'Atualizar', type: 'button' })
+  reloadButton.addEventListener('click', () => {
+    void carregarSolicitacoes()
+  })
+
+  const list = createElement('div', { className: 'pets-list' })
+  if (state.solicitacoes.length === 0) {
+    list.append(createElement('p', { className: 'status-text', text: 'Nenhuma solicitacao encontrada.' }))
+  } else {
+    state.solicitacoes.forEach((solicitacao) => list.append(createSolicitacaoCard(solicitacao)))
+  }
+
+  return createElement(
+    'section',
+    { className: 'pets-section', ariaLabel: 'Solicitacoes de adocao' },
+    createElement('div', { className: 'section-heading' }, createElement('h2', { text: 'Solicitacoes' }), reloadButton),
+    list,
+  )
+}
+
 function createMainContent() {
   const apiUrl = createElement('strong', { text: getApiBaseUrl() })
 
@@ -448,6 +523,7 @@ function createMainContent() {
     createAuthArea(),
     createPetForm(),
     createPetsSection(),
+    createSolicitacoesSection(),
   )
 }
 
@@ -469,7 +545,7 @@ async function bootstrap() {
   try {
     state.usuario = await buscarUsuarioAtual(token)
     state.message = 'Sessao restaurada.'
-    await carregarPets()
+    await carregarDadosPrincipais()
   } catch {
     clearSession()
     state.message = 'Sessao expirada. Entre novamente.'
@@ -477,6 +553,11 @@ async function bootstrap() {
     state.loading = false
     render()
   }
+}
+
+async function carregarDadosPrincipais() {
+  await carregarPets()
+  await carregarSolicitacoes()
 }
 
 async function carregarPets() {
@@ -500,6 +581,27 @@ async function carregarPets() {
   }
 }
 
+async function carregarSolicitacoes() {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Carregando solicitacoes...'
+  render()
+
+  try {
+    state.solicitacoes = await listarSolicitacoes(token)
+    state.message = 'Solicitacoes carregadas.'
+  } catch {
+    state.message = 'Nao foi possivel carregar as solicitacoes.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
 async function cadastrarPet(payload: PetPayload) {
   const token = getAccessToken()
   if (!token) {
@@ -517,6 +619,79 @@ async function cadastrarPet(payload: PetPayload) {
     await carregarPets()
   } catch {
     state.message = 'Nao foi possivel cadastrar o pet.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function solicitarAdocao(petId: number) {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Enviando solicitacao...'
+  render()
+
+  try {
+    await criarSolicitacao(token, petId, 'Tenho interesse em adotar este pet.')
+    state.message = 'Solicitacao enviada.'
+    await carregarSolicitacoes()
+  } catch {
+    state.message = 'Nao foi possivel enviar a solicitacao.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function cancelarAdocao(solicitacaoId: number) {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = 'Cancelando solicitacao...'
+  render()
+
+  try {
+    await cancelarSolicitacao(token, solicitacaoId)
+    state.solicitacoes = state.solicitacoes.filter((solicitacao) => solicitacao.id !== solicitacaoId)
+    state.message = 'Solicitacao cancelada.'
+  } catch {
+    state.message = 'Nao foi possivel cancelar a solicitacao.'
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function decidirSolicitacao(solicitacaoId: number, decisao: 'aprovar' | 'recusar') {
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  state.loading = true
+  state.message = decisao === 'aprovar' ? 'Aprovando solicitacao...' : 'Recusando solicitacao...'
+  render()
+
+  try {
+    const atualizada = decisao === 'aprovar'
+      ? await aprovarSolicitacao(token, solicitacaoId)
+      : await recusarSolicitacao(token, solicitacaoId)
+    state.solicitacoes = state.solicitacoes.map((solicitacao) => (
+      solicitacao.id === atualizada.id ? atualizada : solicitacao
+    ))
+    state.message = decisao === 'aprovar' ? 'Solicitacao aprovada.' : 'Solicitacao recusada.'
+    if (decisao === 'aprovar') {
+      await carregarPets()
+    }
+  } catch {
+    state.message = 'Nao foi possivel atualizar a solicitacao.'
   } finally {
     state.loading = false
     render()

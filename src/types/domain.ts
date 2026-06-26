@@ -47,3 +47,17 @@ export type PetPayload = {
   descricao: string
   status: StatusPet
 }
+
+export type StatusSolicitacao = 'pendente' | 'aprovada' | 'recusada' | 'cancelada'
+
+export type SolicitacaoAdocao = {
+  id: number
+  usuario: number
+  usuario_nome: string
+  pet: number
+  pet_nome: string
+  mensagem: string
+  status: StatusSolicitacao
+  criado_em: string
+  atualizado_em: string
+}
