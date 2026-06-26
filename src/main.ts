@@ -526,8 +526,20 @@ function createPetsFilters() {
       ['medio', 'Medio'],
       ['grande', 'Grande'],
     ]),
+    createFilterSelect('status', 'Status', [
+      ['', 'Todos'],
+      ['disponivel', 'Disponivel'],
+      ['em_processo', 'Em processo'],
+      ['adotado', 'Adotado'],
+      ['indisponivel', 'Indisponivel'],
+    ]),
     createActionButton('secondary-button', 'Filtrar', 'submit'),
   )
+
+  setFormValue(form, 'search', state.petFilters.search ?? '')
+  setFormValue(form, 'especie', state.petFilters.especie ?? '')
+  setFormValue(form, 'porte', state.petFilters.porte ?? '')
+  setFormValue(form, 'status', state.petFilters.status ?? '')
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault()
@@ -535,6 +547,7 @@ function createPetsFilters() {
       search: getInput(form, 'search'),
       especie: getInput(form, 'especie'),
       porte: getInput(form, 'porte'),
+      status: getInput(form, 'status') as StatusPet | '',
     }
     await carregarPets()
   })
