@@ -278,6 +278,15 @@ button {
   background: var(--surface-muted);
 }
 
+.pet-photo {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 .pet-card h3 {
   margin: 0 0 8px;
   font-size: 18px;

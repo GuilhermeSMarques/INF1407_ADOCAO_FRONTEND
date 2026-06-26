@@ -77,6 +77,16 @@ function getInput(form: HTMLFormElement, name: string) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function getFileInput(form: HTMLFormElement, name: string) {
+  const field = form.elements.namedItem(name)
+
+  if (field instanceof HTMLInputElement && field.files?.length) {
+    return field.files[0]
+  }
+
+  return null
+}
+
 function createField(labelText: string, name: string, type = 'text', required = true) {
   const inputId = `field-${name}`
   const label = createElement('label', { htmlFor: inputId, text: labelText })
@@ -87,6 +97,16 @@ function createField(labelText: string, name: string, type = 'text', required = 
     required,
   })
   input.type = type
+
+  return createElement('div', { className: 'form-field' }, label, input)
+}
+
+function createFileField(labelText: string, name: string) {
+  const inputId = `field-${name}`
+  const label = createElement('label', { htmlFor: inputId, text: labelText })
+  const input = createElement('input', { id: inputId, name })
+  input.type = 'file'
+  input.accept = 'image/*'
 
   return createElement('div', { className: 'form-field' }, label, input)
 }
@@ -406,6 +426,16 @@ function createSelect(name: string, labelText: string, options: Array<[string, s
   return createElement('div', { className: 'form-field' }, label, select)
 }
 
+function resolveMediaUrl(path: string) {
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path
+  }
+
+  const baseUrl = getApiBaseUrl().replace(/\/$/, '')
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${baseUrl}${normalizedPath}`
+}
+
 function createPetsFilters() {
   const form = createElement(
     'form',
@@ -439,6 +469,18 @@ function createPetsFilters() {
   return form
 }
 
+function createPetPhoto(pet: Pet) {
+  if (!pet.foto) {
+    return null
+  }
+
+  const image = createElement('img', { className: 'pet-photo' })
+  image.src = resolveMediaUrl(pet.foto)
+  image.alt = `Foto de ${pet.nome}`
+
+  return image
+}
+
 function createPetCard(pet: Pet) {
   const children: Node[] = [
     createElement('h3', { text: pet.nome }),
@@ -446,6 +488,11 @@ function createPetCard(pet: Pet) {
     createElement('p', { className: 'pet-description', text: pet.descricao || 'Sem descricao cadastrada.' }),
     createElement('p', { className: 'pet-meta' }, createText('Responsavel: '), createElement('strong', { text: pet.responsavel_nome })),
   ]
+  const photo = createPetPhoto(pet)
+
+  if (photo) {
+    children.unshift(photo)
+  }
 
   if (state.usuario?.tipo_usuario === 'responsavel') {
     const editButton = createElement('button', { className: 'secondary-button', text: 'Editar', type: 'button' })
@@ -515,6 +562,7 @@ function createPetForm() {
       ['adotado', 'Adotado'],
       ['indisponivel', 'Indisponivel'],
     ]),
+    createFileField('Foto', 'foto'),
     createField('Descricao', 'descricao', 'text', false),
     createElement('button', { className: 'primary-button', text: submitText, type: 'submit' }),
   )
@@ -549,6 +597,7 @@ function createPetForm() {
       porte: getInput(form, 'porte'),
       status: getInput(form, 'status') as StatusPet,
       descricao: getInput(form, 'descricao'),
+      foto: getFileInput(form, 'foto'),
     }
 
     if (state.editingPet) {

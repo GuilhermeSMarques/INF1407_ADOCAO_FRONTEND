@@ -46,6 +46,7 @@ export type PetPayload = {
   porte: string
   descricao: string
   status: StatusPet
+  foto?: File | null
 }
 
 export type StatusSolicitacao = 'pendente' | 'aprovada' | 'recusada' | 'cancelada'
