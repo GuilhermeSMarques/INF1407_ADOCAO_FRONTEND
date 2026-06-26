@@ -11,6 +11,10 @@ export function saveTokens(tokens: Tokens) {
   localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh)
 }
 
+export function saveAccessToken(access: string) {
+  localStorage.setItem(ACCESS_TOKEN_KEY, access)
+}
+
 export function getAccessToken() {
   return localStorage.getItem(ACCESS_TOKEN_KEY)
 }
