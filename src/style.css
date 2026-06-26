@@ -307,6 +307,15 @@ button:disabled {
   color: var(--text);
 }
 
+.date-meta {
+  font-size: 13px;
+}
+
+.date-meta time {
+  color: var(--text);
+  font-weight: 650;
+}
+
 .pet-summary {
   display: flex;
   align-items: center;

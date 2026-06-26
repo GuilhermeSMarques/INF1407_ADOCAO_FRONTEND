@@ -585,6 +585,13 @@ function createPetPhoto(pet: Pet) {
   return image
 }
 
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(value))
+}
+
 function formatStatus(value: StatusPet | StatusSolicitacao) {
   const labels: Record<StatusPet | StatusSolicitacao, string> = {
     disponivel: 'Disponivel',
@@ -607,6 +614,15 @@ function createStatusBadge(status: StatusPet | StatusSolicitacao) {
   })
 }
 
+function createDateMeta(label: string, value: string) {
+  return createElement(
+    'p',
+    { className: 'pet-meta date-meta' },
+    createText(`${label}: `),
+    createElement('time', { text: formatDateTime(value) }),
+  )
+}
+
 function isPetFavorito(petId: number) {
   return state.favoritos.some((favorito) => favorito.pet === petId)
 }
@@ -623,6 +639,7 @@ function createPetCard(pet: Pet) {
     createElement('p', { className: 'pet-meta pet-summary' }, createText(`${pet.especie} - ${pet.porte}`), createStatusBadge(pet.status)),
     createElement('p', { className: 'pet-description', text: pet.descricao || 'Sem descricao cadastrada.' }),
     createElement('p', { className: 'pet-meta' }, createText('Responsavel: '), createElement('strong', { text: pet.responsavel_nome })),
+    createDateMeta('Atualizado em', pet.atualizado_em),
   ]
   const photo = createPetPhoto(pet)
 
@@ -856,6 +873,8 @@ function createSolicitacaoCard(solicitacao: SolicitacaoAdocao) {
     createElement('h3', { text: solicitacao.pet_nome }),
     createElement('p', { className: 'pet-meta pet-summary' }, createText('Status:'), createStatusBadge(solicitacao.status)),
     createElement('p', { className: 'pet-description', text: solicitacao.mensagem || 'Sem mensagem.' }),
+    createElement('p', { className: 'pet-meta' }, createText('Solicitante: '), createElement('strong', { text: solicitacao.usuario_nome })),
+    createDateMeta('Criada em', solicitacao.criado_em),
   ]
 
   if (state.usuario?.tipo_usuario === 'adotante' && solicitacao.status === 'pendente') {
@@ -934,6 +953,7 @@ function createFavoritoCard(favorito: Favorito) {
     { className: 'pet-card' },
     createElement('h3', { text: favorito.pet_nome }),
     createElement('p', { className: 'pet-meta' }, createText(`Favorito #${favorito.id}`)),
+    createDateMeta('Adicionado em', favorito.criado_em),
     createElement('div', { className: 'card-actions' }, removeButton),
   )
 }
