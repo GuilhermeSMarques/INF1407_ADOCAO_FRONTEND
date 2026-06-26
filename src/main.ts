@@ -554,6 +554,10 @@ function createPetPhoto(pet: Pet) {
   return image
 }
 
+function isPetFavorito(petId: number) {
+  return state.favoritos.some((favorito) => favorito.pet === petId)
+}
+
 function createPetCard(pet: Pet) {
   const children: Node[] = [
     createElement('h3', { text: pet.nome }),
@@ -583,10 +587,15 @@ function createPetCard(pet: Pet) {
   }
 
   if (state.usuario?.tipo_usuario === 'adotante' && pet.status === 'disponivel') {
-    const favoriteButton = createActionButton('secondary-button', 'Favoritar')
-    favoriteButton.addEventListener('click', () => {
-      void favoritarPet(pet.id)
-    })
+    const petFavoritado = isPetFavorito(pet.id)
+    const favoriteButton = createActionButton('secondary-button', petFavoritado ? 'Favoritado' : 'Favoritar')
+    favoriteButton.disabled = state.loading || petFavoritado
+
+    if (!petFavoritado) {
+      favoriteButton.addEventListener('click', () => {
+        void favoritarPet(pet.id)
+      })
+    }
 
     const requestButton = createActionButton('primary-button', 'Solicitar adocao')
     requestButton.addEventListener('click', () => {
