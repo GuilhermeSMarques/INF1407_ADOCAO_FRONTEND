@@ -183,7 +183,8 @@ button {
 }
 
 .primary-button,
-.secondary-button {
+.secondary-button,
+.danger-button {
   min-height: 42px;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -208,6 +209,19 @@ button {
 
 .secondary-button:hover {
   border-color: var(--primary);
+}
+
+.danger-button {
+  color: #ffffff;
+  background: var(--danger);
+}
+
+.danger-button:hover {
+  filter: brightness(0.92);
+}
+
+.empty {
+  display: none;
 }
 
 .pets-section {
@@ -237,6 +251,16 @@ button {
   margin-bottom: 18px;
 }
 
+.pet-form {
+  display: grid;
+  gap: 14px;
+}
+
+.pet-form h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
 .pets-list {
   display: grid;
   gap: 12px;
@@ -262,6 +286,12 @@ button {
 
 .pet-meta strong {
   color: var(--text);
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
 }
 
 @media (min-width: 800px) {

@@ -36,3 +36,14 @@ export type PetFilters = {
   status?: StatusPet | ''
   search?: string
 }
+
+export type PetPayload = {
+  nome: string
+  especie: string
+  raca: string
+  idade?: number
+  sexo: string
+  porte: string
+  descricao: string
+  status: StatusPet
+}
