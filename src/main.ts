@@ -42,7 +42,8 @@ if (!app) {
 const root = app
 
 // Telas disponíveis na navegação principal
-type ActiveView = 'pets' | 'solicitacoes' | 'favoritos' | 'painel'
+type ActiveView = 'pets' | 'cadastrar-pet' | 'solicitacoes' | 'favoritos' | 'painel' | 'conta'
+type AuthTab = 'login' | 'register' | 'reset'
 type NavigationItem = [ActiveView, string]
 type SolicitacaoFilters = {
   search?: string
@@ -59,6 +60,7 @@ type AppState = {
   dashboard: DashboardResumo | null
   petFilters: PetFilters
   editingPet: Pet | null
+  authTab: AuthTab
   resetUid: string
   resetToken: string
   loading: boolean
@@ -76,6 +78,7 @@ const state: AppState = {
   dashboard: null,
   petFilters: {},
   editingPet: null,
+  authTab: 'login',
   resetUid: '',
   resetToken: '',
   loading: false,
@@ -145,19 +148,22 @@ function createHeader() {
 }
 
 function getNavigationItems(): NavigationItem[] {
-  if (!state.usuario) {
-    return [['pets', 'Pets']]
+  if (!state.usuario) return []
+
+  const items: NavigationItem[] = [['pets', 'Pets']]
+
+  if (state.usuario.tipo_usuario === 'responsavel') {
+    items.push(['cadastrar-pet', 'Cadastrar Pet'])
   }
 
-  const items: NavigationItem[] = [
-    ['pets', 'Pets'],
-    ['solicitacoes', 'Solicitacoes'],
-    ['painel', 'Painel'],
-  ]
+  items.push(['solicitacoes', 'Solicitacoes'])
 
   if (state.usuario.tipo_usuario === 'adotante') {
-    items.splice(2, 0, ['favoritos', 'Favoritos'])
+    items.push(['favoritos', 'Favoritos'])
   }
+
+  items.push(['painel', 'Painel'])
+  items.push(['conta', 'Conta'])
 
   return items
 }
@@ -184,6 +190,7 @@ function createNavigation() {
     })
     button.addEventListener('click', () => {
       state.activeView = view
+      if (view !== 'cadastrar-pet') state.editingPet = null
       render()
     })
     nav.append(button)
@@ -247,6 +254,10 @@ function extractErrorMessage(data: unknown): string | null {
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof ApiError) {
     return extractErrorMessage(error.data) || fallback
+  }
+
+  if (error instanceof TypeError) {
+    return 'Nao foi possivel conectar ao servidor. Verifique se o backend esta rodando em http://127.0.0.1:8000 e se nenhuma extensao do navegador esta bloqueando a requisicao.'
   }
 
   return fallback
@@ -462,6 +473,7 @@ function createUserPanel(usuario: Usuario) {
     state.dashboard = null
     state.editingPet = null
     state.activeView = 'pets'
+    state.authTab = 'login'
     state.message = 'Sessao encerrada.'
     render()
   })
@@ -474,22 +486,43 @@ function createUserPanel(usuario: Usuario) {
     createElement('p', { className: 'status-text' }, createText('Perfil: '), createElement('strong', { text: usuario.tipo_usuario })),
     createChangePasswordForm(),
     logoutButton,
+    createMessage(),
   )
 }
 
-function createAuthArea() {
-  if (state.usuario) {
-    return createUserPanel(state.usuario)
+function createAuthTabCard() {
+  const tabDefs: Array<{ id: AuthTab; label: string }> = [
+    { id: 'login', label: 'Entrar' },
+    { id: 'register', label: 'Criar conta' },
+    { id: 'reset', label: 'Recuperar senha' },
+  ]
+
+  const tabRow = createElement('div', { className: 'auth-tabs' })
+  tabDefs.forEach(({ id, label }) => {
+    const btn = createElement('button', {
+      className: state.authTab === id ? 'auth-tab-btn active' : 'auth-tab-btn',
+      text: label,
+      type: 'button',
+    })
+    btn.addEventListener('click', () => {
+      state.authTab = id
+      render()
+    })
+    tabRow.append(btn)
+  })
+
+  const content = createElement('div', { className: 'auth-tab-content' })
+  if (state.authTab === 'login') {
+    content.append(createLoginForm())
+  } else if (state.authTab === 'register') {
+    content.append(createRegisterForm())
+  } else {
+    content.append(createPasswordResetArea())
   }
 
-  return createElement(
-    'section',
-    { className: 'auth-grid', ariaLabel: 'Autenticacao' },
-    createLoginForm(),
-    createRegisterForm(),
-    createPasswordResetArea(),
-  )
+  return createElement('div', { className: 'auth-card' }, tabRow, content)
 }
+
 
 function getNumberInput(form: HTMLFormElement, name: string) {
   const value = getInput(form, name)
@@ -691,7 +724,8 @@ function createPetCard(pet: Pet) {
     const editButton = createActionButton('secondary-button', 'Editar')
     editButton.addEventListener('click', () => {
       state.editingPet = pet
-      state.message = `Editando ${pet.nome}.`
+      state.activeView = 'cadastrar-pet'
+      state.message = ''
       render()
     })
 
@@ -733,10 +767,6 @@ function createPetCard(pet: Pet) {
 }
 
 function createPetForm() {
-  if (state.usuario?.tipo_usuario !== 'responsavel') {
-    return createElement('div', { className: 'empty' })
-  }
-
   const editingPet = state.editingPet
   const title = editingPet ? 'Editar pet' : 'Cadastrar pet'
   const submitText = editingPet ? 'Salvar alteracoes' : 'Cadastrar pet'
@@ -787,6 +817,7 @@ function createPetForm() {
     const cancelButton = createActionButton('secondary-button', 'Cancelar edicao')
     cancelButton.addEventListener('click', () => {
       state.editingPet = null
+      state.activeView = 'pets'
       state.message = ''
       render()
     })
@@ -815,11 +846,7 @@ function createPetForm() {
     await cadastrarPet(payload)
   })
 
-  return createElement(
-    'section',
-    { className: 'pets-section', ariaLabel: 'Cadastro de pet' },
-    form,
-  )
+  return createElement('section', { className: 'pets-section', ariaLabel: 'Cadastro de pet' }, form)
 }
 
 function setFormValue(form: HTMLFormElement, name: string, value: string) {
@@ -830,16 +857,7 @@ function setFormValue(form: HTMLFormElement, name: string, value: string) {
 }
 
 function createPetsSection() {
-  if (!state.usuario) {
-    return createElement(
-      'section',
-      { className: 'status-panel', ariaLabel: 'Pets' },
-      createElement('h2', { text: 'Pets' }),
-      createElement('p', { className: 'status-text', text: 'Entre para visualizar os pets disponiveis.' }),
-    )
-  }
-
-  const reloadButton = createActionButton('secondary-button', 'Atualizar pets')
+  const reloadButton = createActionButton('secondary-button', 'Atualizar')
   reloadButton.addEventListener('click', () => {
     void carregarPets()
   })
@@ -1083,47 +1101,45 @@ function createDashboardSection() {
 }
 
 function createMainContent() {
+  // Antes do login: card de autenticação centralizado com abas
+  if (!state.usuario) {
+    const inner = createElement('div', { className: 'auth-page' })
+    inner.append(createAuthTabCard())
+    if (state.message) {
+      inner.append(createElement('p', { className: 'auth-feedback', text: state.message }))
+    }
+    return createElement('main', { className: 'app-main--auth' }, inner)
+  }
+
   ensureActiveView()
 
-  const apiUrl = createElement('strong', { text: getApiBaseUrl() })
-  const sections: Node[] = [
-    createElement(
-      'section',
-      { className: 'status-panel', ariaLabel: 'Status da aplicacao' },
-      createElement('h2', { text: 'Conexao da API' }),
-      createElement('p', { className: 'status-text' }, createText('API configurada: '), apiUrl),
-      createMessage(),
-    ),
-    createAuthArea(),
-  ]
+  // Cada view é uma página dedicada em largura total
+  let content: Node
 
   if (state.activeView === 'pets') {
-    sections.push(createPetForm(), createPetsSection())
+    content = createPetsSection()
+  } else if (state.activeView === 'cadastrar-pet') {
+    content = createPetForm()
+  } else if (state.activeView === 'solicitacoes') {
+    content = createSolicitacoesSection()
+  } else if (state.activeView === 'favoritos') {
+    content = createFavoritosSection()
+  } else if (state.activeView === 'painel') {
+    content = createDashboardSection()
+  } else {
+    content = createUserPanel(state.usuario)
   }
 
-  if (state.activeView === 'solicitacoes') {
-    sections.push(createSolicitacoesSection())
-  }
-
-  if (state.activeView === 'favoritos') {
-    sections.push(createFavoritosSection())
-  }
-
-  if (state.activeView === 'painel') {
-    sections.push(createDashboardSection())
-  }
-
-  return createElement(
-    'main',
-    { className: 'app-main' },
-    ...sections,
-  )
+  return createElement('main', { className: 'app-main' }, content)
 }
 
 // Renderização síncrona e completa: reconstrói toda a árvore DOM a cada mudança de estado.
 // Evita inconsistências entre estado e UI sem a necessidade de um framework reativo.
 function render() {
-  root.replaceChildren(createHeader(), createNavigation(), createMainContent())
+  const children: Node[] = [createHeader()]
+  if (state.usuario) children.push(createNavigation())
+  children.push(createMainContent())
+  root.replaceChildren(...children)
 }
 
 // Inicialização: verifica se há token salvo e restaura a sessão automaticamente
@@ -1303,6 +1319,7 @@ async function cadastrarPet(payload: PetPayload) {
   try {
     await criarPet(token, payload)
     state.editingPet = null
+    state.activeView = 'pets'
     state.message = 'Pet cadastrado.'
     await carregarPets()
     await carregarDashboard()
@@ -1404,6 +1421,7 @@ async function salvarPet(petId: number, payload: PetPayload) {
     const petAtualizado = await atualizarPet(token, petId, payload)
     state.pets = state.pets.map((pet) => (pet.id === petAtualizado.id ? petAtualizado : pet))
     state.editingPet = null
+    state.activeView = 'pets'
     state.message = 'Pet atualizado.'
     await carregarDashboard()
   } catch (error) {

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560">
+  <rect width="900" height="560" fill="#f8f9fa"/>
+  <!-- Header -->
+  <rect width="900" height="64" fill="#2563eb"/>
+  <text x="24" y="40" font-family="sans-serif" font-size="20" font-weight="bold" fill="white">Adoção de Pets</text>
+  <text x="24" y="58" font-family="sans-serif" font-size="12" fill="#bfdbfe">Frontend acadêmico consumindo a API Django REST.</text>
+  <!-- Nav -->
+  <rect y="64" width="900" height="40" fill="#1e40af"/>
+  <rect x="16" y="72" width="60" height="24" rx="4" fill="#2563eb" stroke="white" stroke-width="1"/>
+  <text x="46" y="88" font-family="sans-serif" font-size="13" fill="white" text-anchor="middle">Pets</text>
+  <rect x="84" y="72" width="110" height="24" rx="4" fill="transparent"/>
+  <text x="139" y="88" font-family="sans-serif" font-size="13" fill="#bfdbfe" text-anchor="middle">Solicitações</text>
+  <rect x="202" y="72" width="80" height="24" rx="4" fill="transparent"/>
+  <text x="242" y="88" font-family="sans-serif" font-size="13" fill="#bfdbfe" text-anchor="middle">Favoritos</text>
+  <rect x="290" y="72" width="60" height="24" rx="4" fill="transparent"/>
+  <text x="320" y="88" font-family="sans-serif" font-size="13" fill="#bfdbfe" text-anchor="middle">Painel</text>
+  <!-- Filters -->
+  <rect x="24" y="120" width="852" height="56" rx="6" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="40" y="134" width="160" height="28" rx="4" fill="#f1f5f9"/>
+  <text x="50" y="152" font-family="sans-serif" font-size="12" fill="#94a3b8">Busca...</text>
+  <rect x="216" y="134" width="120" height="28" rx="4" fill="#f1f5f9"/>
+  <text x="226" y="152" font-family="sans-serif" font-size="12" fill="#94a3b8">Espécie: Todas</text>
+  <rect x="352" y="134" width="120" height="28" rx="4" fill="#f1f5f9"/>
+  <text x="362" y="152" font-family="sans-serif" font-size="12" fill="#94a3b8">Porte: Todos</text>
+  <rect x="488" y="134" width="120" height="28" rx="4" fill="#f1f5f9"/>
+  <text x="498" y="152" font-family="sans-serif" font-size="12" fill="#94a3b8">Status: Todos</text>
+  <rect x="624" y="134" width="80" height="28" rx="4" fill="#64748b"/>
+  <text x="664" y="152" font-family="sans-serif" font-size="12" fill="white" text-anchor="middle">Filtrar</text>
+  <!-- Pet cards -->
+  <!-- Card 1 -->
+  <rect x="24" y="192" width="264" height="300" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="24" y="192" width="264" height="140" rx="8" fill="#dbeafe"/>
+  <text x="156" y="268" font-family="sans-serif" font-size="32" text-anchor="middle">🐕</text>
+  <text x="44" y="356" font-family="sans-serif" font-size="15" font-weight="bold" fill="#1e293b">Rex</text>
+  <rect x="44" y="362" width="60" height="18" rx="9" fill="#dcfce7"/>
+  <text x="74" y="375" font-family="sans-serif" font-size="11" fill="#16a34a" text-anchor="middle">disponível</text>
+  <text x="44" y="400" font-family="sans-serif" font-size="12" fill="#64748b">Cachorro · Grande</text>
+  <text x="44" y="418" font-family="sans-serif" font-size="12" fill="#64748b">Labrador energético e brincalhão</text>
+  <rect x="44" y="448" width="100" height="28" rx="4" fill="#f1f5f9"/>
+  <text x="94" y="466" font-family="sans-serif" font-size="12" fill="#475569" text-anchor="middle">Favoritar</text>
+  <rect x="152" y="448" width="116" height="28" rx="4" fill="#2563eb"/>
+  <text x="210" y="466" font-family="sans-serif" font-size="12" fill="white" text-anchor="middle">Solicitar adoção</text>
+  <!-- Card 2 -->
+  <rect x="304" y="192" width="264" height="300" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="304" y="192" width="264" height="140" rx="8" fill="#fce7f3"/>
+  <text x="436" y="268" font-family="sans-serif" font-size="32" text-anchor="middle">🐈</text>
+  <text x="324" y="356" font-family="sans-serif" font-size="15" font-weight="bold" fill="#1e293b">Mia</text>
+  <rect x="324" y="362" width="60" height="18" rx="9" fill="#dcfce7"/>
+  <text x="354" y="375" font-family="sans-serif" font-size="11" fill="#16a34a" text-anchor="middle">disponível</text>
+  <text x="324" y="400" font-family="sans-serif" font-size="12" fill="#64748b">Gato · Pequeno</text>
+  <text x="324" y="418" font-family="sans-serif" font-size="12" fill="#64748b">Siamesa dócil e carinhosa</text>
+  <rect x="324" y="448" width="100" height="28" rx="4" fill="#f1f5f9"/>
+  <text x="374" y="466" font-family="sans-serif" font-size="12" fill="#475569" text-anchor="middle">Favoritar</text>
+  <rect x="432" y="448" width="116" height="28" rx="4" fill="#2563eb"/>
+  <text x="490" y="466" font-family="sans-serif" font-size="12" fill="white" text-anchor="middle">Solicitar adoção</text>
+  <!-- Card 3 -->
+  <rect x="584" y="192" width="264" height="300" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="584" y="192" width="264" height="140" rx="8" fill="#fef3c7"/>
+  <text x="716" y="268" font-family="sans-serif" font-size="32" text-anchor="middle">🐕</text>
+  <text x="604" y="356" font-family="sans-serif" font-size="15" font-weight="bold" fill="#1e293b">Bolinha</text>
+  <rect x="604" y="362" width="80" height="18" rx="9" fill="#fee2e2"/>
+  <text x="644" y="375" font-family="sans-serif" font-size="11" fill="#dc2626" text-anchor="middle">em processo</text>
+  <text x="604" y="400" font-family="sans-serif" font-size="12" fill="#64748b">Cachorro · Médio</text>
+  <text x="604" y="418" font-family="sans-serif" font-size="12" fill="#64748b">SRD muito calmo</text>
+  <text x="450" y="530" font-family="sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Lista de pets disponíveis com filtros por espécie, porte e status</text>
+</svg>

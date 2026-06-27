@@ -75,13 +75,13 @@ npm run build
 
 ## Telas da aplicação
 
-![Tela de login e cadastro](docs/screenshot-login.png)
+![Tela de login e cadastro](docs/screenshot-login.svg)
 *Tela de autenticação: login, cadastro e recuperação de senha lado a lado.*
 
-![Lista de pets disponíveis](docs/screenshot-pets.png)
+![Lista de pets disponíveis](docs/screenshot-pets.svg)
 *Pets disponíveis para adoção com filtros por espécie, porte e status.*
 
-![Painel de métricas](docs/screenshot-painel.png)
+![Painel de métricas](docs/screenshot-painel.svg)
 *Painel com indicadores personalizados por perfil de usuário.*
 
 ---

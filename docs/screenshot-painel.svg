@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="440" viewBox="0 0 900 440">
+  <rect width="900" height="440" fill="#f8f9fa"/>
+  <!-- Header -->
+  <rect width="900" height="64" fill="#2563eb"/>
+  <text x="24" y="40" font-family="sans-serif" font-size="20" font-weight="bold" fill="white">Adoção de Pets</text>
+  <text x="24" y="58" font-family="sans-serif" font-size="12" fill="#bfdbfe">Frontend acadêmico consumindo a API Django REST.</text>
+  <!-- Nav -->
+  <rect y="64" width="900" height="40" fill="#1e40af"/>
+  <rect x="16" y="72" width="60" height="24" rx="4" fill="transparent"/>
+  <text x="46" y="88" font-family="sans-serif" font-size="13" fill="#bfdbfe" text-anchor="middle">Pets</text>
+  <rect x="84" y="72" width="110" height="24" rx="4" fill="transparent"/>
+  <text x="139" y="88" font-family="sans-serif" font-size="13" fill="#bfdbfe" text-anchor="middle">Solicitações</text>
+  <rect x="202" y="72" width="80" height="24" rx="4" fill="transparent"/>
+  <text x="242" y="88" font-family="sans-serif" font-size="13" fill="#bfdbfe" text-anchor="middle">Favoritos</text>
+  <rect x="290" y="72" width="60" height="24" rx="4" fill="#2563eb" stroke="white" stroke-width="1"/>
+  <text x="320" y="88" font-family="sans-serif" font-size="13" fill="white" text-anchor="middle">Painel</text>
+  <!-- Dashboard section title -->
+  <text x="44" y="138" font-family="sans-serif" font-size="18" font-weight="bold" fill="#1e293b">Painel</text>
+  <rect x="820" y="116" width="56" height="28" rx="4" fill="#f1f5f9"/>
+  <text x="848" y="134" font-family="sans-serif" font-size="12" fill="#475569" text-anchor="middle">Atualizar</text>
+  <!-- Metric cards -->
+  <rect x="24" y="156" width="180" height="100" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="114" y="210" font-family="sans-serif" font-size="36" font-weight="bold" fill="#2563eb" text-anchor="middle">12</text>
+  <text x="114" y="236" font-family="sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Pets</text>
+
+  <rect x="220" y="156" width="180" height="100" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="310" y="210" font-family="sans-serif" font-size="36" font-weight="bold" fill="#16a34a" text-anchor="middle">8</text>
+  <text x="310" y="236" font-family="sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Disponíveis</text>
+
+  <rect x="416" y="156" width="180" height="100" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="506" y="210" font-family="sans-serif" font-size="36" font-weight="bold" fill="#7c3aed" text-anchor="middle">3</text>
+  <text x="506" y="236" font-family="sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Adotados</text>
+
+  <rect x="612" y="156" width="180" height="100" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="702" y="210" font-family="sans-serif" font-size="36" font-weight="bold" fill="#f59e0b" text-anchor="middle">5</text>
+  <text x="702" y="236" font-family="sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Pendentes</text>
+
+  <rect x="24" y="272" width="180" height="100" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="114" y="326" font-family="sans-serif" font-size="36" font-weight="bold" fill="#16a34a" text-anchor="middle">2</text>
+  <text x="114" y="352" font-family="sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Aprovadas</text>
+
+  <rect x="220" y="272" width="180" height="100" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="310" y="326" font-family="sans-serif" font-size="36" font-weight="bold" fill="#dc2626" text-anchor="middle">1</text>
+  <text x="310" y="352" font-family="sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Recusadas</text>
+
+  <rect x="416" y="272" width="180" height="100" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="506" y="326" font-family="sans-serif" font-size="36" font-weight="bold" fill="#0891b2" text-anchor="middle">4</text>
+  <text x="506" y="352" font-family="sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Favoritos</text>
+
+  <text x="450" y="410" font-family="sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Painel com indicadores personalizados por perfil de usuário</text>
+</svg>
