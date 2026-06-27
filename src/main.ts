@@ -1198,7 +1198,7 @@ function createDashboardSection() {
 
   return createElement(
     'section',
-    { className: 'pets-section', ariaLabel: 'Painel resumido' },
+    { className: 'pets-section dashboard-section', ariaLabel: 'Painel resumido' },
     createSectionHeading('Painel', reloadButton),
     metrics,
   )
