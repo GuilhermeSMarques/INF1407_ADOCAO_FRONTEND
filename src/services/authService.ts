@@ -73,3 +73,11 @@ export function confirmarRecuperacaoSenha(uid: string, token: string, novaSenha:
     }),
   })
 }
+
+export function atualizarPerfil(token: string, payload: { email?: string; telefone?: string }) {
+  return apiRequest<Usuario>('/api/auth/me/', {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify(payload),
+  })
+}

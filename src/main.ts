@@ -3,6 +3,7 @@ import { ApiError, getApiBaseUrl } from './api/client'
 import { clearSession, getAccessToken, saveTokens } from './auth/session'
 import {
   alterarSenha,
+  atualizarPerfil,
   buscarUsuarioAtual,
   confirmarRecuperacaoSenha,
   login,
@@ -60,6 +61,7 @@ type AppState = {
   dashboard: DashboardResumo | null
   petFilters: PetFilters
   editingPet: Pet | null
+  editingProfile: boolean
   authTab: AuthTab
   resetUid: string
   resetToken: string
@@ -78,6 +80,7 @@ const state: AppState = {
   dashboard: null,
   petFilters: {},
   editingPet: null,
+  editingProfile: false,
   authTab: 'login',
   resetUid: '',
   resetToken: '',
@@ -429,7 +432,7 @@ function createPasswordResetArea() {
 function createChangePasswordForm() {
   const form = createElement(
     'form',
-    { className: 'auth-form compact-form' },
+    { className: 'auth-form' },
     createElement('h2', { text: 'Alterar senha' }),
     createField('Senha atual', 'senha_atual', 'password'),
     createField('Nova senha', 'nova_senha', 'password'),
@@ -461,6 +464,54 @@ function createChangePasswordForm() {
   return form
 }
 
+function createEditProfileSection(usuario: Usuario) {
+  const wrapper = createElement('div', { className: 'compact-form' })
+
+  if (!state.editingProfile) {
+    const editButton = createActionButton('secondary-button', 'Alterar dados')
+    editButton.addEventListener('click', () => {
+      state.editingProfile = true
+      state.message = ''
+      render()
+    })
+    wrapper.append(editButton)
+    return wrapper
+  }
+
+  const form = createElement(
+    'form',
+    { className: 'auth-form' },
+    createElement('h2', { text: 'Editar dados' }),
+    createField('Email', 'email', 'email'),
+    createField('Telefone', 'telefone', 'tel', false),
+  )
+
+  setFormValue(form, 'email', usuario.email)
+  setFormValue(form, 'telefone', usuario.telefone || '')
+
+  const cancelButton = createActionButton('secondary-button', 'Cancelar')
+  cancelButton.addEventListener('click', () => {
+    state.editingProfile = false
+    state.message = ''
+    render()
+  })
+
+  form.append(
+    createElement('div', { className: 'card-actions' },
+      createActionButton('primary-button', 'Salvar dados', 'submit'),
+      cancelButton,
+    ),
+  )
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    await atualizarPerfilUsuario(getInput(form, 'email'), getInput(form, 'telefone'))
+  })
+
+  wrapper.append(form)
+  return wrapper
+}
+
 function createUserPanel(usuario: Usuario) {
   const logoutButton = createActionButton('secondary-button', 'Sair')
   logoutButton.addEventListener('click', () => {
@@ -472,22 +523,33 @@ function createUserPanel(usuario: Usuario) {
     state.favoritos = []
     state.dashboard = null
     state.editingPet = null
+    state.editingProfile = false
     state.activeView = 'pets'
     state.authTab = 'login'
     state.message = 'Sessao encerrada.'
     render()
   })
 
-  return createElement(
+  const infoPanel = createElement(
     'section',
-    { className: 'status-panel', ariaLabel: 'Usuario autenticado' },
+    { className: 'status-panel', ariaLabel: 'Dados da conta' },
     createElement('h2', { text: 'Sessao ativa' }),
-    createElement('p', { className: 'status-text' }, createText('Usuario: '), createElement('strong', { text: usuario.nome })),
+    createElement('p', { className: 'status-text' }, createText('Nome: '), createElement('strong', { text: usuario.nome })),
+    createElement('p', { className: 'status-text' }, createText('Email: '), createElement('strong', { text: usuario.email })),
+    createElement('p', { className: 'status-text' }, createText('Telefone: '), createElement('strong', { text: usuario.telefone || '—' })),
     createElement('p', { className: 'status-text' }, createText('Perfil: '), createElement('strong', { text: usuario.tipo_usuario })),
-    createChangePasswordForm(),
+    createEditProfileSection(usuario),
     logoutButton,
     createMessage(),
   )
+
+  const passwordPanel = createElement(
+    'section',
+    { className: 'status-panel', ariaLabel: 'Alterar senha' },
+    createChangePasswordForm(),
+  )
+
+  return createElement('div', { className: 'conta-layout' }, infoPanel, passwordPanel)
 }
 
 function createAuthTabCard() {
@@ -1426,6 +1488,26 @@ async function salvarPet(petId: number, payload: PetPayload) {
     await carregarDashboard()
   } catch (error) {
     state.message = getErrorMessage(error, 'Nao foi possivel atualizar o pet.')
+  } finally {
+    state.loading = false
+    render()
+  }
+}
+
+async function atualizarPerfilUsuario(email: string, telefone: string) {
+  const token = getAccessToken()
+  if (!token) return
+
+  state.loading = true
+  state.message = 'Salvando dados...'
+  render()
+
+  try {
+    state.usuario = await atualizarPerfil(token, { email, telefone })
+    state.editingProfile = false
+    state.message = 'Dados atualizados com sucesso.'
+  } catch (error) {
+    state.message = getErrorMessage(error, 'Nao foi possivel atualizar os dados.')
   } finally {
     state.loading = false
     render()

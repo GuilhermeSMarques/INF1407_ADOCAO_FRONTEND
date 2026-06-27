@@ -208,7 +208,19 @@ button {
   border-radius: 10px;
   padding: 28px;
   box-shadow: var(--shadow);
-  max-width: 480px;
+}
+
+/* ─── Conta page: 2 columns on desktop ─── */
+.conta-layout {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 640px) {
+  .conta-layout {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
 }
 
 .status-panel h2 {
