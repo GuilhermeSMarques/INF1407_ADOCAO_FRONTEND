@@ -62,6 +62,7 @@ type AppState = {
   petFilters: PetFilters
   editingPet: Pet | null
   editingProfile: boolean
+  editingPassword: boolean
   authTab: AuthTab
   resetUid: string
   resetToken: string
@@ -81,6 +82,7 @@ const state: AppState = {
   petFilters: {},
   editingPet: null,
   editingProfile: false,
+  editingPassword: false,
   authTab: 'login',
   resetUid: '',
   resetToken: '',
@@ -179,6 +181,23 @@ function ensureActiveView() {
   }
 }
 
+function handleLogout() {
+  clearSession()
+  state.usuario = null
+  state.pets = []
+  state.solicitacoes = []
+  state.solicitacaoFilters = {}
+  state.favoritos = []
+  state.dashboard = null
+  state.editingPet = null
+  state.editingProfile = false
+  state.editingPassword = false
+  state.activeView = 'pets'
+  state.authTab = 'login'
+  state.message = 'Sessao encerrada.'
+  render()
+}
+
 function createNavigation() {
   ensureActiveView()
 
@@ -198,6 +217,10 @@ function createNavigation() {
     })
     nav.append(button)
   })
+
+  const logoutButton = createElement('button', { className: 'nav-button nav-logout', text: 'Sair', type: 'button' })
+  logoutButton.addEventListener('click', handleLogout)
+  nav.append(logoutButton)
 
   return nav
 }
@@ -452,6 +475,7 @@ function createChangePasswordForm() {
 
     try {
       await alterarSenha(token, getInput(form, 'senha_atual'), getInput(form, 'nova_senha'))
+      state.editingPassword = false
       state.message = 'Senha alterada com sucesso.'
     } catch (error) {
       state.message = getErrorMessage(error, 'Nao foi possivel alterar a senha.')
@@ -514,21 +538,7 @@ function createEditProfileSection(usuario: Usuario) {
 
 function createUserPanel(usuario: Usuario) {
   const logoutButton = createActionButton('secondary-button', 'Sair')
-  logoutButton.addEventListener('click', () => {
-    clearSession()
-    state.usuario = null
-    state.pets = []
-    state.solicitacoes = []
-    state.solicitacaoFilters = {}
-    state.favoritos = []
-    state.dashboard = null
-    state.editingPet = null
-    state.editingProfile = false
-    state.activeView = 'pets'
-    state.authTab = 'login'
-    state.message = 'Sessao encerrada.'
-    render()
-  })
+  logoutButton.addEventListener('click', handleLogout)
 
   const infoPanel = createElement(
     'section',
@@ -543,10 +553,34 @@ function createUserPanel(usuario: Usuario) {
     createMessage(),
   )
 
+  const passwordPanelChildren: Node[] = [
+    createElement('h2', { text: 'Alterar senha' }),
+  ]
+
+  if (!state.editingPassword) {
+    const showBtn = createActionButton('secondary-button', 'Alterar senha')
+    showBtn.addEventListener('click', () => {
+      state.editingPassword = true
+      state.message = ''
+      render()
+    })
+    passwordPanelChildren.push(showBtn)
+  } else {
+    const form = createChangePasswordForm()
+    const cancelBtn = createActionButton('secondary-button', 'Cancelar')
+    cancelBtn.addEventListener('click', () => {
+      state.editingPassword = false
+      state.message = ''
+      render()
+    })
+    form.append(cancelBtn)
+    passwordPanelChildren.push(form)
+  }
+
   const passwordPanel = createElement(
     'section',
     { className: 'status-panel', ariaLabel: 'Alterar senha' },
-    createChangePasswordForm(),
+    ...passwordPanelChildren,
   )
 
   return createElement('div', { className: 'conta-layout' }, infoPanel, passwordPanel)
@@ -1166,7 +1200,10 @@ function createMainContent() {
   // Antes do login: card de autenticação centralizado com abas
   if (!state.usuario) {
     const inner = createElement('div', { className: 'auth-page' })
-    inner.append(createAuthTabCard())
+    inner.append(
+      createElement('p', { className: 'auth-tagline', text: 'Conectando pets a familias.' }),
+      createAuthTabCard(),
+    )
     if (state.message) {
       inner.append(createElement('p', { className: 'auth-feedback', text: state.message }))
     }

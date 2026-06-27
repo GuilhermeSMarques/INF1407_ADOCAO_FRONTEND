@@ -1,16 +1,28 @@
 :root {
-  --bg: #f7f9fb;
-  --surface: #ffffff;
-  --surface-muted: #eef3f6;
-  --border: #d7e0e5;
-  --text: #233038;
-  --text-muted: #64727b;
+  /* Brand */
   --primary: #176b63;
   --primary-strong: #0f4d47;
   --accent: #c4872b;
-  --danger: #b42318;
-  --shadow: 0 4px 16px rgba(35, 48, 56, 0.10);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --danger: #b91c1c;
+
+  /* Neutrals — warm palette (inspired by reference project) */
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --surface-muted: #f5ede5;
+  --border: #e7ddd1;
+  --text: #1f2937;
+  --text-muted: #667085;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(31, 41, 55, 0.06);
+  --shadow: 0 10px 24px rgba(31, 41, 55, 0.09);
+
+  /* Radius — consistent everywhere */
+  --radius: 8px;
+
+  font-family: Inter, "Segoe UI", Roboto, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -19,7 +31,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -39,6 +53,12 @@ button {
   cursor: pointer;
 }
 
+h1, h2, h3 {
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+
+/* ─── App shell ─── */
 #app {
   min-height: 100svh;
   display: flex;
@@ -52,50 +72,56 @@ button {
 
 /* ─── Header ─── */
 .app-header {
-  padding: 20px clamp(16px, 4vw, 48px) 16px;
+  padding: 14px clamp(16px, 4vw, 48px);
   background: var(--primary-strong);
   color: #fff;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   color: #fff;
+  letter-spacing: -0.3px;
 }
 
 .app-subtitle {
-  margin: 4px 0 0;
-  color: rgba(255,255,255,0.65);
-  font-size: 13px;
+  margin: 2px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
 }
 
-/* ─── Nav ─── */
+/* ─── Navigation ─── */
 .app-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
-  padding: 8px clamp(16px, 4vw, 48px);
+  padding: 8px clamp(12px, 3vw, 40px);
   background: var(--primary);
-  border-bottom: 1px solid rgba(0,0,0,0.12);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
 }
 
 .nav-button {
-  min-height: 36px;
-  padding: 7px 16px;
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 6px;
-  color: rgba(255,255,255,0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius);
+  color: rgba(255, 255, 255, 0.78);
   background: transparent;
   white-space: nowrap;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .nav-button:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.13);
   color: #fff;
+  border-color: rgba(255, 255, 255, 0.38);
 }
 
 .nav-button.active {
@@ -104,13 +130,18 @@ button {
   border-color: #fff;
 }
 
+.nav-button.nav-logout {
+  margin-left: auto;
+  border-color: rgba(255, 255, 255, 0.38);
+}
+
 /* ─── Auth page (unauthenticated) ─── */
 .app-main--auth {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 48px 16px 60px;
-  background: var(--bg);
+  padding: 48px 16px 64px;
+  background: linear-gradient(150deg, #e6f4f1 0%, #faf7f2 50%, #fdf0e2 100%);
 }
 
 .auth-page {
@@ -118,6 +149,16 @@ button {
   max-width: 480px;
   display: grid;
   gap: 14px;
+}
+
+/* Tagline above the auth card */
+.auth-tagline {
+  margin: 0 0 4px;
+  text-align: center;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--primary-strong);
+  letter-spacing: -0.2px;
 }
 
 .auth-card {
@@ -136,7 +177,7 @@ button {
 
 .auth-tab-btn {
   flex: 1;
-  padding: 13px 8px;
+  padding: 12px 8px;
   border: none;
   border-bottom: 2px solid transparent;
   background: transparent;
@@ -169,10 +210,10 @@ button {
   padding: 12px 16px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 
-/* ─── Auth forms (inside card and in user panel) ─── */
+/* ─── Auth forms ─── */
 .auth-form {
   display: grid;
   gap: 14px;
@@ -183,8 +224,7 @@ button {
   font-size: 18px;
 }
 
-/* Hide the redundant h2 inside forms that are direct children of the tab content
-   (login and register). Sub-headings inside .auth-grid (password reset) stay visible. */
+/* The tab label already acts as the heading */
 .auth-tab-content > .auth-form > h2 {
   display: none;
 }
@@ -194,9 +234,9 @@ button {
   gap: 20px;
 }
 
-/* ─── Main layout (authenticated) — uma página por vez, largura total ─── */
+/* ─── Main layout (authenticated) ─── */
 .app-main {
-  max-width: 960px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 28px clamp(16px, 4vw, 40px) 56px;
 }
@@ -205,9 +245,25 @@ button {
 .status-panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 28px;
-  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.status-panel h2 {
+  margin: 0 0 12px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.status-text {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.status-text strong {
+  color: var(--primary-strong);
 }
 
 /* ─── Conta page: 2 columns on desktop ─── */
@@ -221,21 +277,6 @@ button {
     grid-template-columns: 1fr 1fr;
     align-items: start;
   }
-}
-
-.status-panel h2 {
-  margin: 0 0 14px;
-  font-size: 20px;
-}
-
-.status-text {
-  margin: 6px 0 0;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-.status-text strong {
-  color: var(--primary-strong);
 }
 
 /* ─── Message ─── */
@@ -260,7 +301,7 @@ button {
 .form-field label {
   color: var(--text);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .form-field input,
@@ -269,11 +310,11 @@ button {
   width: 100%;
   min-height: 42px;
   border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 9px 11px;
+  border-radius: var(--radius);
+  padding: 9px 12px;
   color: var(--text);
   background: var(--surface);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .form-field textarea {
@@ -293,13 +334,17 @@ button {
 .primary-button,
 .secondary-button,
 .danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 42px;
   border: 1px solid transparent;
-  border-radius: 7px;
-  padding: 9px 16px;
+  border-radius: var(--radius);
+  padding: 9px 18px;
   font-weight: 700;
   font-size: 14px;
-  transition: background 0.15s, filter 0.15s;
+  transition: background 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .primary-button {
@@ -309,6 +354,7 @@ button {
 
 .primary-button:hover:not(:disabled) {
   background: var(--primary-strong);
+  box-shadow: 0 2px 8px rgba(23, 107, 99, 0.28);
 }
 
 .secondary-button {
@@ -319,6 +365,7 @@ button {
 
 .secondary-button:hover:not(:disabled) {
   border-color: var(--primary);
+  background: #e4f4f1;
 }
 
 .danger-button {
@@ -327,33 +374,34 @@ button {
 }
 
 .danger-button:hover:not(:disabled) {
-  filter: brightness(0.9);
+  filter: brightness(0.88);
+  box-shadow: 0 2px 8px rgba(185, 28, 28, 0.24);
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.52;
 }
 
-/* ─── User panel change-password form ─── */
+/* ─── Edit profile separator ─── */
 .compact-form {
   margin-top: 16px;
   border-top: 1px solid var(--border);
   padding-top: 16px;
 }
 
-/* ─── Empty ─── */
+/* ─── Hidden empty states ─── */
 .empty {
   display: none;
 }
 
-/* ─── Pets / content sections ─── */
+/* ─── Content sections ─── */
 .pets-section {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 20px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
 .section-heading {
@@ -375,15 +423,16 @@ button:disabled {
 .section-heading h2 {
   margin: 0;
   font-size: 18px;
+  font-weight: 700;
 }
 
 .count-badge {
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
+  min-height: 22px;
   border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 2px 10px;
+  border-radius: var(--radius);
+  padding: 2px 9px;
   color: var(--text-muted);
   background: var(--surface-muted);
   font-size: 12px;
@@ -397,7 +446,7 @@ button:disabled {
   margin-bottom: 18px;
 }
 
-/* ─── Pet form (add / edit) ─── */
+/* ─── Pet form ─── */
 .pet-form {
   display: grid;
   gap: 14px;
@@ -406,41 +455,53 @@ button:disabled {
 .pet-form h2 {
   margin: 0;
   font-size: 18px;
+  font-weight: 700;
 }
 
 /* ─── Pet cards grid ─── */
 .pets-list {
   display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
+/* Card base — overflow hidden lets edge-to-edge photo clip to card radius */
 .pet-card {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 16px;
-  background: var(--surface-muted);
+  background: var(--surface);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow 0.18s, transform 0.18s;
 }
 
+.pet-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+/* Edge-to-edge square photo using negative-margin bleed.
+   overflow:hidden on .pet-card clips corners to the card's border-radius. */
 .pet-photo {
   display: block;
-  width: 100%;
-  height: 180px;
-  margin-bottom: 12px;
-  border-radius: 7px;
+  width: calc(100% + 32px);
+  aspect-ratio: 1 / 1;
   object-fit: cover;
+  margin: -16px -16px 12px;
+  border-radius: 0;
 }
 
 .pet-card h3 {
-  margin: 0 0 8px;
-  font-size: 17px;
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .pet-meta,
 .pet-description {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
   color: var(--text-muted);
   font-size: 14px;
 }
@@ -470,41 +531,39 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   min-height: 22px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
   padding: 2px 9px;
-  color: var(--text);
-  background: var(--surface);
   font-size: 12px;
   font-weight: 700;
 }
 
 .status-disponivel,
 .status-aprovada {
-  color: #0f5132;
-  background: #d1e7dd;
-  border-color: #badbcc;
+  color: #15803d;
+  background: #dcfce7;
+  border-color: #bbf7d0;
 }
 
 .status-em_processo,
 .status-pendente {
-  color: #664d03;
-  background: #fff3cd;
-  border-color: #ffecb5;
+  color: #b45309;
+  background: #fef3c7;
+  border-color: #fde68a;
 }
 
 .status-adotado {
-  color: #084298;
-  background: #cfe2ff;
-  border-color: #b6d4fe;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border-color: #bfdbfe;
 }
 
 .status-indisponivel,
 .status-recusada,
 .status-cancelada {
-  color: #842029;
-  background: #f8d7da;
-  border-color: #f5c2c7;
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fecaca;
 }
 
 /* ─── Card actions ─── */
@@ -524,24 +583,29 @@ button:disabled {
 .metrics-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
 .metric-card {
-  min-height: 82px;
+  min-height: 90px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px;
+  border-radius: var(--radius);
+  padding: 16px;
   background: var(--surface-muted);
   display: grid;
   align-content: center;
   gap: 4px;
   text-align: center;
+  transition: box-shadow 0.15s;
+}
+
+.metric-card:hover {
+  box-shadow: var(--shadow-sm);
 }
 
 .metric-value {
   color: var(--primary-strong);
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1;
 }
