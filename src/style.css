@@ -619,7 +619,7 @@ button:disabled {
 /* ─── Desktop: filtros em linha ─── */
 @media (min-width: 720px) {
   .filters-form {
-    grid-template-columns: 1.5fr 1fr 1fr 1fr auto auto;
+    grid-template-columns: 1.5fr repeat(4, 1fr) auto auto;
     align-items: end;
   }
 

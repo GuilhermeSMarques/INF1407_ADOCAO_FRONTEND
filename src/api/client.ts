@@ -3,7 +3,7 @@ import { clearSession, getRefreshToken, saveAccessToken } from '../auth/session'
 const DEFAULT_API_URL = 'http://127.0.0.1:8000/'
 
 export function getApiBaseUrl() {
-  return import.meta.env.VITE_API_URL ?? DEFAULT_API_URL
+  return import.meta.env.VITE_API_URL || DEFAULT_API_URL
 }
 
 export class ApiError extends Error {

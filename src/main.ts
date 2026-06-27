@@ -686,6 +686,12 @@ function createPetsFilters() {
       ['medio', 'Medio'],
       ['grande', 'Grande'],
     ]),
+    createFilterSelect('sexo', 'Sexo', [
+      ['', 'Todos'],
+      ['nao_informado', 'Nao informado'],
+      ['macho', 'Macho'],
+      ['femea', 'Femea'],
+    ]),
     createFilterSelect('status', 'Status', [
       ['', 'Todos'],
       ['disponivel', 'Disponivel'],
@@ -705,6 +711,7 @@ function createPetsFilters() {
   setFormValue(form, 'search', state.petFilters.search ?? '')
   setFormValue(form, 'especie', state.petFilters.especie ?? '')
   setFormValue(form, 'porte', state.petFilters.porte ?? '')
+  setFormValue(form, 'sexo', state.petFilters.sexo ?? '')
   setFormValue(form, 'status', state.petFilters.status ?? '')
 
   form.addEventListener('submit', async (event) => {
@@ -713,6 +720,7 @@ function createPetsFilters() {
       search: getInput(form, 'search'),
       especie: getInput(form, 'especie'),
       porte: getInput(form, 'porte'),
+      sexo: getInput(form, 'sexo'),
       status: getInput(form, 'status') as StatusPet | '',
     }
     await carregarPets()
